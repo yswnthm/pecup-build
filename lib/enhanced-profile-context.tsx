@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useSession } from 'next-auth/react'
 import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ProfileDisplayCache, ResourcesCache } from './simple-cache'
 import { PerfMon } from './performance-monitor'
-import { broadcastBulkCacheUpdate, subscribeToBulkCacheUpdates } from './cross-tab'
+
 
 // Narrow shapes for bulk static and dynamic data with safe extensibility
 export interface EnhancedProfileStaticData {
@@ -283,18 +283,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 				})
 			}
 
-			// Cross-tab broadcast so other tabs can hydrate their session caches/state
-			try {
-				broadcastBulkCacheUpdate(email, {
-					profile: data.profile,
-					static: data.static,
-					dynamic: data.dynamic,
-					subjects: Array.isArray(data.subjects) ? data.subjects : undefined,
-					subjectsContext: data.profile?.branch && data.profile?.year && data.profile?.semester
-						? { branch: data.profile.branch, year: data.profile.year, semester: data.profile.semester }
-						: undefined
-				})
-			} catch (_) { }
+
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : String(err)
 			setError(message || 'Failed to load data')
@@ -359,52 +348,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [profile])
 
-	// Cross-tab subscription to hydrate this tab's caches/state without loops
-	useEffect(() => {
-		if (status !== 'authenticated' || !session?.user?.email) return
-		const email = session.user?.email
-		if (!email) return
 
-		let mounted = true
-		const unsubscribe = subscribeToBulkCacheUpdates((msg) => {
-			if (!mounted) return
-			if (msg.email !== email) return
-			const p = msg.payload
-			if (!p) return
-			try {
-				if (p.profile) {
-					ProfileCache.set(email, p.profile)
-					if (mounted) {
-						setProfile((prev) => p.profile ?? prev)
-					}
-				}
-				if (p.static) {
-					StaticCache.set(p.static)
-					if (mounted) {
-						setStaticData((prev) => p.static ?? prev)
-					}
-				}
-				if (p.dynamic) {
-					DynamicCache.set(p.dynamic)
-					if (mounted) {
-						setDynamicData((prev) => p.dynamic ?? prev)
-					}
-				}
-				if (p.subjects && p.subjectsContext) {
-					SubjectsCache.set(p.subjectsContext.branch, p.subjectsContext.year, p.subjectsContext.semester, p.subjects)
-					if (mounted) {
-						setSubjects((prev) => Array.isArray(p.subjects) ? p.subjects : prev)
-					}
-				}
-			} catch (_) { }
-		})
-
-		return () => {
-			mounted = false
-			unsubscribe()
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [status, session?.user?.email])
 
 	return (
 		<ProfileContext.Provider
