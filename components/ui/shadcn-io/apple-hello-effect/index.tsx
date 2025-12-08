@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -218,6 +218,9 @@ function AppleHelloEnglishEffect({
         transition={{
           duration: calc(2.5),
           ease: "easeInOut",
+          repeat: Infinity,
+          repeatType: "reverse",
+          repeatDelay: 0.5,
           opacity: { duration: 0.5 },
         }}
         onAnimationComplete={onAnimationComplete}

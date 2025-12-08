@@ -54,7 +54,7 @@ export function LoadingScreen({ children }: { children: React.ReactNode }) {
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.6, ease: "easeInOut" }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
                     >
                         <div className="relative">
                             <AppleHelloEnglishEffect
