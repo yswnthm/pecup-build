@@ -5,7 +5,6 @@ import "./globals.css"
 import { Sidebar } from "@/components/sidebar"
 import { Providers } from "./providers" // ✅ Import Providers
 import WhatsAppJoinPopup from "@/components/WhatsAppJoinPopup"
-import { LoadingScreen } from "@/components/loading-screen"
 
 import { Analytics } from "@vercel/analytics/react"
 import { TopBar } from '@/components/TopBar'
@@ -28,15 +27,13 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers> {/* ✅ Wrap with Providers */}
-          <LoadingScreen>
-            <TopBar />
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <main className="flex-1 pt-0 md:pt-2 px-6 md:px-8 pb-6 md:pb-8">{children}</main>
-            </div>
+          <TopBar />
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 pt-0 md:pt-2 px-6 md:px-8 pb-6 md:pb-8">{children}</main>
+          </div>
 
-            <WhatsAppJoinPopup />
-          </LoadingScreen>
+          <WhatsAppJoinPopup />
         </Providers>
         <Analytics />
         <SpeedInsights />

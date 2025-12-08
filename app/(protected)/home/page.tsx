@@ -151,9 +151,35 @@ export default function HomePage() {
     }
   }, [sessionStatus])
 
+  // Track if this is the initial page load (first visit this session)
+  const [isInitialLoad, setIsInitialLoad] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('dashboard_loaded')
+    }
+    return true
+  })
+
+  // Mark as loaded once data is ready
+  useEffect(() => {
+    if (sessionStatus !== 'loading' && !loading && !isLoadingPrime) {
+      sessionStorage.setItem('dashboard_loaded', 'true')
+      setIsInitialLoad(false)
+    }
+  }, [sessionStatus, loading, isLoadingPrime])
+
+  // Loading state - full-screen on initial load, centered on navigation
   if (sessionStatus === 'loading' || loading || isLoadingPrime) {
+    if (isInitialLoad) {
+      // Full-screen loading for initial page load
+      return (
+        <div className="fixed inset-0 z-[100] flex justify-center items-center bg-background">
+          <Loader />
+        </div>
+      )
+    }
+    // Centered loading for navigation (TopBar visible)
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-[60vh]">
         <Loader />
       </div>
     )
