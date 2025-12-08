@@ -14,6 +14,7 @@ import { useProfile, ProfileContextType, EnhancedProfileDynamicData } from '@/li
 import { useSession } from 'next-auth/react'
 import Loader from '@/components/Loader'
 import { triggerSideCannons } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 
 type Exam = {
   subject: string
@@ -291,7 +292,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-4 p-4 md:p-6 lg:p-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="space-y-4 p-4 md:p-6 lg:p-8"
+    >
       <Header />
 
 
@@ -557,6 +563,6 @@ export default function HomePage() {
         </Card>
       </div>
       <ChatBubble href="https://chat.pecup.in" />
-    </div>
+    </motion.div>
   )
 }
