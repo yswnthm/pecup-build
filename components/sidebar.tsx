@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   LogOut,
-  AppWindowMac,
   RotateCcw
 } from "lucide-react"
 import { useState } from "react"
@@ -41,11 +40,6 @@ const routes = [
     name: "Archive",
     path: "/archive",
     icon: Archive,
-  },
-  {
-    name: "Developer",
-    path: "/dev-dashboard",
-    icon: AppWindowMac,
   },
   {
     name: "Contact Administration",

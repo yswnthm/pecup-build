@@ -27,6 +27,7 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  serverExternalPackages: ['googleapis'],
 }
 
 if (userConfig) {
