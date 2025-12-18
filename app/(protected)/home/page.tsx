@@ -212,7 +212,7 @@ export default function HomePage() {
 
     cards.push(
       <Link key="resources" href="/resources" className="block">
-        <Card className="h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
+        <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">Resources</CardTitle>
             <BookOpen className="h-5 w-5 text-primary" />
@@ -227,7 +227,7 @@ export default function HomePage() {
     // Archive for all users
     cards.push(
       <Link key="archive" href="/archive" className="block">
-        <Card className="h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
+        <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">Archive</CardTitle>
             <Archive className="h-5 w-5 text-primary" />
@@ -244,7 +244,7 @@ export default function HomePage() {
       const dashboardHref = profile.role === 'representative' ? '/dev-dashboard' : '/dashboard'
       cards.push(
         <Link key="dashboard" href={dashboardHref} className="block">
-          <Card className="h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
+          <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-medium">Management</CardTitle>
               <Settings className="h-5 w-5 text-primary" />
@@ -266,7 +266,7 @@ export default function HomePage() {
     if (profile?.role !== 'representative') {
       cards.push(
         <Link key="contact" href="/contact" className="block">
-          <Card className="h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
+          <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-medium">Contact</CardTitle>
               <Phone className="h-5 w-5 text-primary" />
@@ -281,6 +281,8 @@ export default function HomePage() {
 
     return cards
   }
+
+  const navigationCards = getNavigationCards()
 
   return (
     <motion.div
@@ -324,8 +326,12 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {getNavigationCards()}
+      <div className={`grid gap-4 md:grid-cols-2 ${navigationCards.length === 1 ? 'lg:grid-cols-1 max-w-2xl mx-auto' :
+          navigationCards.length === 2 ? 'lg:grid-cols-2' :
+            navigationCards.length === 3 ? 'lg:grid-cols-3' :
+              'lg:grid-cols-4'
+        }`}>
+        {navigationCards}
       </div>
 
       {isLoadingPrime && (
