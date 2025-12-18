@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Sidebar } from "@/components/sidebar"
+
 import { Providers } from "./providers" // ✅ Import Providers
 import WhatsAppJoinPopup from "@/components/WhatsAppJoinPopup"
 
@@ -29,7 +29,6 @@ export default function RootLayout({
         <Providers> {/* ✅ Wrap with Providers */}
           <TopBar />
           <div className="flex min-h-screen">
-            <Sidebar />
             <main className="flex-1 pt-0 md:pt-2 px-6 md:px-8 pb-6 md:pb-8">{children}</main>
           </div>
 
