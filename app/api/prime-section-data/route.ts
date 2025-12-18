@@ -3,8 +3,6 @@
 //        and fetches resources for ALL exams on that specific date.
 // Version: Handles multiple exams on the next day, Reduced Logging
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { createSupabaseAdmin } from '@/lib/supabase';
 const supabaseAdmin = createSupabaseAdmin();
 
@@ -50,20 +48,20 @@ interface PrimeSectionData {
 function isDateWithinDays(dateString: string, daysThreshold: number): boolean {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Start of today
-    
+
     const targetDate = new Date(dateString);
     targetDate.setHours(0, 0, 0, 0); // Start of target date
-    
+
     const diffTime = targetDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     return diffDays >= 0 && diffDays <= daysThreshold;
 }
 
 export async function GET(request: Request) {
     const startTime = Date.now();
     console.log(`API Route: /api/prime-section-data called at ${new Date().toISOString()}`);
-    
+
     try {
         // Set start date to today (no past exams)
         const startUtc = new Date();
@@ -75,24 +73,13 @@ export async function GET(request: Request) {
         const startDateStr = startUtc.toISOString().slice(0, 10);
         const endDateStr = endUtc.toISOString().slice(0, 10);
 
-        // Determine context from query or profile
+        // Determine context from query
         const url = new URL(request.url)
         let yearParam = url.searchParams.get('year')
         let branchParam = url.searchParams.get('branch')
+
         if (!yearParam || !branchParam) {
-          const session = await getServerSession(authOptions)
-          const email = session?.user?.email?.toLowerCase()
-          if (email) {
-            const { data: profile } = await supabaseAdmin
-              .from('profiles')
-              .select('year,branch')
-              .eq('email', email)
-              .maybeSingle()
-            if (profile) {
-              yearParam = yearParam || String(profile.year)
-              branchParam = branchParam || String(profile.branch)
-            }
-          }
+            console.warn('API Prime: Missing year or branch parameters. Results may be generic.');
         }
 
         // Fetch upcoming exams from Supabase - get all exams since table doesn't have year/branch filtering yet
@@ -175,11 +162,11 @@ export async function GET(request: Request) {
 
             // Query resources with proper UUID filters
             let resourceQuery = supabaseAdmin
-              .from('resources')
-              .select('id, name, description, date, type, category, url, subject')
-              .is('deleted_at', null)
-              .in('subject', uniqueUpcomingSubjects)
-              .order('date', { ascending: false });
+                .from('resources')
+                .select('id, name, description, date, type, category, url, subject')
+                .is('deleted_at', null)
+                .in('subject', uniqueUpcomingSubjects)
+                .order('date', { ascending: false });
 
             // Apply UUID-based filters for year_id and branch_id
             if (yearId) {
@@ -254,7 +241,7 @@ export async function GET(request: Request) {
             const unitMatch = title.match(/unit\s+(\d+)/i);
             const assignmentMatch = title.match(/assignment\s+(\d+)/i);
             const unitNumber = unitMatch ? parseInt(unitMatch[1], 10) :
-                           assignmentMatch ? parseInt(assignmentMatch[1], 10) : 999;
+                assignmentMatch ? parseInt(assignmentMatch[1], 10) : 999;
 
             // Create the correctly formatted item for frontend
             const item: GroupedResourceItem & { unitNumber: number } = {
@@ -305,15 +292,15 @@ export async function GET(request: Request) {
         });
 
         const responseData: PrimeSectionData = {
-            data: Object.keys(groupedResources.notes).length > 0 || 
-                  Object.keys(groupedResources.assignments).length > 0 || 
-                  Object.keys(groupedResources.papers).length > 0 ? groupedResources : null,
+            data: Object.keys(groupedResources.notes).length > 0 ||
+                Object.keys(groupedResources.assignments).length > 0 ||
+                Object.keys(groupedResources.papers).length > 0 ? groupedResources : null,
             triggeringSubjects: uniqueUpcomingSubjects
         };
 
         const endTime = Date.now();
         console.log(`API Prime: Request completed in ${endTime - startTime}ms`);
-        
+
         return NextResponse.json(responseData);
 
     } catch (error: any) {

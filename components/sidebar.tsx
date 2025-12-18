@@ -17,7 +17,6 @@ import {
   RotateCcw
 } from "lucide-react"
 import { useState } from "react"
-import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
 const routes = [
@@ -51,7 +50,6 @@ const routes = [
 export function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const { data: session } = useSession()
   const router = useRouter()
 
   const handleClickOutside = (e: React.MouseEvent) => {

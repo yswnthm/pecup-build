@@ -4,11 +4,11 @@ import { RefreshButton } from './RefreshButton'
 import { ThemeToggle } from './theme-toggle'
 import { Button } from '@/components/ui/button'
 import { LogOut, RotateCcw } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
+import { useProfile } from '@/lib/enhanced-profile-context'
 import { useRouter } from 'next/navigation'
 
 export function TopBar() {
-  const { data: session } = useSession()
+  const { profile, logout } = useProfile()
   const router = useRouter()
 
   const handleResetProfile = () => {
@@ -20,7 +20,7 @@ export function TopBar() {
       <div className="text-2xl md:text-3xl font-bold text-primary">PEC.UP</div>
       <div className="flex gap-2">
         <RefreshButton />
-        {session && (
+        {profile && (
           <>
             <Button
               variant="ghost"
@@ -33,7 +33,7 @@ export function TopBar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => signOut()}
+              onClick={() => logout()}
             >
               <LogOut className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Logout</span>

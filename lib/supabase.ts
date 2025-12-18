@@ -9,13 +9,18 @@ if (!publicSupabaseUrl) missingPublicEnvVars.push('NEXT_PUBLIC_SUPABASE_URL');
 if (!publicSupabaseAnonKey) missingPublicEnvVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
 if (missingPublicEnvVars.length > 0) {
-  throw new Error(
+  // Warn instead of throw. This allows the app to start even if keys are missing.
+  console.warn(
     `Missing required environment variable(s): ${missingPublicEnvVars.join(', ')}. ` +
-      'These are required to initialize the public Supabase client.'
+    'Required for public Supabase client. Data fetching will likely fail.'
   );
 }
 
-export const supabase = createClient(publicSupabaseUrl as string, publicSupabaseAnonKey as string);
+// Create client with fallbacks if missing to prevent crash on module load
+export const supabase = createClient(
+  publicSupabaseUrl || 'https://example.com',
+  publicSupabaseAnonKey || 'placeholder-key'
+);
 
 // Singleton pattern for admin client to reduce resource waste
 let supabaseAdminInstance: SupabaseClient | null = null;
@@ -52,10 +57,24 @@ export function getSupabaseAdmin(): SupabaseClient {
       });
       return supabaseAdminInstance;
     }
-    throw new Error(
-      'Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY. ' +
-        'The admin client bypasses RLS and must only be used server-side (API routes, server actions, middleware, or SSR).'
-    );
+
+    // In dev, assuming user might not have keys, return a dummy or warn?
+    // If we throw here, any server-side usage will crash.
+    // Let's warn and return a dummy client that will fail on real calls.
+    console.warn('Missing SUPABASE_SERVICE_ROLE_KEY. Admin client will not function correctly.');
+    supabaseAdminInstance = createClient(
+      publicSupabaseUrl || 'https://example.com',
+      'placeholder-service-role-key', {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+    return supabaseAdminInstance;
+    // throw new Error(
+    //   'Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY. ' +
+    //     'The admin client bypasses RLS and must only be used server-side (API routes, server actions, middleware, or SSR).'
+    // );
   }
 
   supabaseAdminInstance = createClient(publicSupabaseUrl as string, serviceRoleKey, {

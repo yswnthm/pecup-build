@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProfileCache, ProfileDisplayCache } from '@/lib/simple-cache'
@@ -9,7 +8,6 @@ export function Header() {
   // Debug logging
   console.log('[DEBUG] Header component rendering on page:', typeof window !== 'undefined' ? window.location.pathname : 'SSR')
 
-  const { data: session, status } = useSession()
   const { profile, loading: profileLoading } = useProfile()
 
   const [cachedProfile, setCachedProfile] = useState<ReturnType<typeof ProfileCache.get> | null>(null)
@@ -20,19 +18,19 @@ export function Header() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const email = session?.user?.email
+    const email = profile?.email
     if (!email) return
     const cached = ProfileCache.get(email)
     if (cached) setCachedProfile(cached)
     const display = ProfileDisplayCache.get(email)
     if (display) setDisplayCache(display)
-  }, [session?.user?.email])
+  }, [profile?.email])
 
   const displayName = useMemo(() => {
-    return session?.user?.name || profile?.name || cachedProfile?.name || displayCache?.name || undefined
-  }, [session?.user?.name, profile?.name, cachedProfile?.name, displayCache?.name])
+    return profile?.name || cachedProfile?.name || displayCache?.name || undefined
+  }, [profile?.name, cachedProfile?.name, displayCache?.name])
 
-  const showNameSkeleton = !displayName && (status === 'loading' || profileLoading)
+  const showNameSkeleton = !displayName && profileLoading
 
   const metaLine = useMemo(() => {
     const source = (profile ?? cachedProfile ?? displayCache) as (typeof profile) | null
@@ -55,7 +53,7 @@ export function Header() {
       {metaLine ? (
         <div className="text-sm text-muted-foreground">{metaLine}</div>
       ) : (
-        (status === 'loading' || profileLoading) && (
+        profileLoading && (
           <div className="h-4 w-40"><Skeleton className="h-4 w-40" /></div>
         )
       )}

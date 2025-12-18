@@ -78,12 +78,22 @@ export default function RemindersPage() {
 
   useEffect(() => {
     async function fetchReminders() {
+      // If we don't have a profile yet, we can't fetch personalized reminders effectively
+      // or at least passing empty params might return generic ones.
+      // But let's wait for profile if possible, or just pass what we have.
+      // Actually, if profile is null but loading is false, maybe we should fetch?
+      // But typically profile loads fast from local storage.
+
       setLoading(true)
       setError(null)
 
       try {
+        const params = new URLSearchParams()
+        if (profile?.year) params.set('year', String(profile.year))
+        if (profile?.branch) params.set('branch', profile.branch)
+
         // client‐side can hit the relative URL
-        const res = await fetch('/api/reminders', { cache: 'no-store' })
+        const res = await fetch(`/api/reminders?${params.toString()}`, { cache: 'no-store' })
         if (!res.ok) {
           throw new Error(`Status ${res.status}`)
         }
@@ -100,8 +110,9 @@ export default function RemindersPage() {
       }
     }
 
+    // Call fetchReminders when profile changes or on mount
     fetchReminders()
-  }, [])
+  }, [profile]) // Added profile dependency
 
   // FULL‑SCREEN LOADER
   if (loading) {

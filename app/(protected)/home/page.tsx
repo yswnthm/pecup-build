@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { BookOpen, Bell, Archive, Phone, AlertCircle, Loader2, Settings, Users, CalendarDays, Clock, Star, ExternalLink, FileText, Edit, FileQuestion } from 'lucide-react'
 import { useProfile, ProfileContextType, EnhancedProfileDynamicData } from '@/lib/enhanced-profile-context'
-import { useSession } from 'next-auth/react'
 import Loader from '@/components/Loader'
 import { triggerSideCannons } from '@/components/ui/button'
 import { motion } from 'framer-motion'
@@ -63,7 +62,6 @@ const SHOW_ACTUAL_USER_COUNT = true;
 
 export default function HomePage() {
   const { profile, dynamicData, loading, error } = useProfile()
-  const { status: sessionStatus } = useSession()
 
   const [usersCount, setUsersCount] = useState<number>(0)
 
@@ -83,7 +81,7 @@ export default function HomePage() {
 
   // Confetti effect when user count reaches 300 - triggers every page load after loading is complete
   useEffect(() => {
-    if (sessionStatus !== 'loading' && !loading && !isLoadingPrime && usersCount >= 300) {
+    if (!loading && !isLoadingPrime && usersCount >= 300) {
       const hasSeenConfetti = localStorage.getItem('confetti_seen_300')
 
       if (!hasSeenConfetti) {
@@ -94,17 +92,22 @@ export default function HomePage() {
         }, 500)
       }
     }
-  }, [sessionStatus, loading, isLoadingPrime, usersCount])
+  }, [loading, isLoadingPrime, usersCount])
 
   useEffect(() => {
     let isMounted = true
 
-    if (sessionStatus === 'authenticated') {
+    if (!loading && profile) {
       const fetchUpdates = async () => {
         setIsLoadingUpdates(true)
         setUpdatesError(null)
         try {
-          const response = await fetch('/api/recent-updates')
+          const queryParams = new URLSearchParams({
+            branch: profile.branch || '',
+            year: profile.year?.toString() || ''
+          }).toString()
+          const response = await fetch(`/api/recent-updates?${queryParams}`)
+
           if (!response.ok) throw new Error(`Updates fetch failed: ${response.status}`)
           const data = await response.json()
           if (!Array.isArray(data)) throw new Error('Invalid updates data format.')
@@ -122,7 +125,12 @@ export default function HomePage() {
         setPrimeError(null)
         setPrimeData(null)
         try {
-          const response = await fetch('/api/prime-section-data')
+          const queryParams = new URLSearchParams({
+            branch: profile.branch || '',
+            year: profile.year?.toString() || ''
+          }).toString()
+          const response = await fetch(`/api/prime-section-data?${queryParams}`)
+
           if (!response.ok) {
             const errorBody = await response.json().catch(() => ({}))
             throw new Error(`Prime Section fetch failed: ${response.status} - ${errorBody?.error || 'Unknown error'}`)
@@ -142,7 +150,7 @@ export default function HomePage() {
 
       fetchUpdates()
       fetchPrimeSectionData()
-    } else if (sessionStatus === 'unauthenticated') {
+    } else if (!loading && !profile) {
       if (isMounted) setIsLoadingUpdates(false)
       if (isMounted) setIsLoadingPrime(false)
     }
@@ -150,7 +158,7 @@ export default function HomePage() {
     return () => {
       isMounted = false
     }
-  }, [sessionStatus])
+  }, [loading, profile])
 
   // Track if this is the initial page load (first visit this session)
   const [isInitialLoad, setIsInitialLoad] = useState(() => {
@@ -162,14 +170,14 @@ export default function HomePage() {
 
   // Mark as loaded once data is ready
   useEffect(() => {
-    if (sessionStatus !== 'loading' && !loading && !isLoadingPrime) {
+    if (!loading && !isLoadingPrime) {
       sessionStorage.setItem('dashboard_loaded', 'true')
       setIsInitialLoad(false)
     }
-  }, [sessionStatus, loading, isLoadingPrime])
+  }, [loading, isLoadingPrime])
 
   // Loading state - full-screen on initial load, centered on navigation
-  if (sessionStatus === 'loading' || loading || isLoadingPrime) {
+  if (loading || isLoadingPrime) {
     if (isInitialLoad) {
       // Full-screen loading for initial page load
       return (

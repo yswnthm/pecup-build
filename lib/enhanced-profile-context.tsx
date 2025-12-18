@@ -1,9 +1,10 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ProfileDisplayCache, ResourcesCache } from './simple-cache'
 import { PerfMon } from './performance-monitor'
+import { LocalProfileService, LocalProfile } from './local-profile'
 
 
 // Narrow shapes for bulk static and dynamic data with safe extensibility
@@ -37,7 +38,7 @@ function isEnhancedProfileDynamicData(obj: unknown): obj is EnhancedProfileDynam
 }
 
 interface Profile {
-	id: string
+	id: string // Local profile might not have ID, but we can generate one or use undefined. Interface expects ID.
 	name?: string
 	email: string
 	roll_number?: string
@@ -46,6 +47,11 @@ interface Profile {
 	semester?: number | null
 	section?: string
 	role?: string
+
+	// IDs for compat
+	branch_id?: string
+	year_id?: string
+	semester_id?: string
 }
 
 export interface Subject {
@@ -67,12 +73,13 @@ export interface ProfileContextType {
 	refreshProfile: () => Promise<void>
 	refreshSubjects: () => Promise<void>
 	forceRefresh: () => Promise<void>
+	logout: () => void
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-	const { data: session, status } = useSession()
+	const router = useRouter()
 	const [profile, setProfile] = useState<Profile | null>(null)
 	const [subjects, setSubjects] = useState<Subject[]>([])
 	const [staticData, setStaticData] = useState<EnhancedProfileStaticData | null>(null)
@@ -82,111 +89,53 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 	const [error, setError] = useState<string | null>(null)
 	const [warnings, setWarnings] = useState<string[] | null>(null)
 
-	// Load from cache on mount
+	// Load from local storage on mount
 	useEffect(() => {
-		if (status !== 'authenticated' || !session?.user?.email) {
-			// Clear all in-memory state and caches when user is not authenticated
-			setProfile(null)
-			setSubjects([])
-			setStaticData(null)
-			setDynamicData(null)
-			setResources(null)
-			setError(null)
-			setWarnings(null)
-
-			// Clear all caches to ensure clean slate for next user
-			ProfileCache.clear()
-			try { ProfileDisplayCache.clear() } catch (_) { }
-			StaticCache.clear()
-			DynamicCache.clear()
-			SubjectsCache.clearAll()
-
+		const localProfile = LocalProfileService.get()
+		if (!localProfile) {
+			router.replace('/onboarding')
 			setLoading(false)
 			return
 		}
 
-		const email = session.user.email
+		// Convert LocalProfile to Profile
+		const convertedProfile: Profile = {
+			id: localProfile.roll_number, // Use roll number as ID
+			name: localProfile.name,
+			email: localProfile.email || 'local-user',
+			roll_number: localProfile.roll_number,
+			branch: localProfile.branch,
+			year: localProfile.year,
+			semester: localProfile.semester,
+			section: localProfile.section,
+			role: 'student',
+			branch_id: localProfile.branch_id,
+			year_id: localProfile.year_id,
+			semester_id: localProfile.semester_id,
+		}
 
+		setProfile(convertedProfile)
 
-		// Try to load cached data and record cache checks
-		const cachedProfile = ProfileCache.get(email)
-		PerfMon.recordCacheCheck(!!cachedProfile)
+		// Load other cached data
 		const cachedStatic = StaticCache.get(isEnhancedProfileStaticData)
-		PerfMon.recordCacheCheck(!!cachedStatic)
 		const cachedDynamic = DynamicCache.get(isEnhancedProfileDynamicData)
-		PerfMon.recordCacheCheck(!!cachedDynamic)
 
-		let foundCache = false
+		if (cachedStatic) setStaticData(cachedStatic)
+		if (cachedDynamic) setDynamicData(cachedDynamic)
 
-		if (cachedProfile) {
-			setProfile(cachedProfile)
-			// Seed persistent display cache for instant header render
-			try { ProfileDisplayCache.set(email, cachedProfile) } catch (_) { }
-			foundCache = true
-
-			// Try to load subjects for this profile
-			let cachedSubjects: Subject[] | null = null
-			if (cachedProfile && typeof cachedProfile.year === 'number' && cachedProfile.year > 0 && cachedProfile.branch && cachedProfile.semester) {
-				cachedSubjects = SubjectsCache.get(
-					cachedProfile.branch,
-					cachedProfile.year,
-					cachedProfile.semester
-				)
-				PerfMon.recordCacheCheck(!!cachedSubjects)
-				if (cachedSubjects) {
-					setSubjects(cachedSubjects)
-				}
-			}
+		// Try to load subjects from cache
+		if (localProfile.branch && localProfile.year && localProfile.semester) {
+			const cachedSubjects = SubjectsCache.get(localProfile.branch, localProfile.year, localProfile.semester)
+			if (cachedSubjects) setSubjects(cachedSubjects)
 		}
 
-		if (cachedStatic) {
-			setStaticData(cachedStatic)
-			foundCache = true
-		}
+		setLoading(false)
 
-		if (cachedDynamic) {
-			setDynamicData(cachedDynamic)
-			foundCache = true
-		}
+		// Fetch fresh data in background
+		fetchBulkData(false, convertedProfile)
 
-		if (foundCache) {
-			setLoading(false)
-			// Only refresh in background when dynamic cache is missing/expired
-			if (!cachedDynamic) {
-				fetchBulkData(false).catch((err) => {
-					if (process.env.NODE_ENV !== 'production') {
-						// eslint-disable-next-line no-console
-						console.error('Background refresh failed (cached present):', err)
-					}
-				})
-			}
-		} else {
-			// No cache, fetch with spinner
-			fetchBulkData(true).catch((err) => {
-				if (process.env.NODE_ENV !== 'production') {
-					// eslint-disable-next-line no-console
-					console.error('Initial fetch failed (no cache):', err)
-				}
-			})
-		}
-
-		// Log cache status for debugging
-		if (process.env.NODE_ENV !== 'production') {
-			let subjectsCount = 0
-			if (cachedProfile && typeof cachedProfile.year === 'number' && cachedProfile.year > 0 && cachedProfile.branch && cachedProfile.semester) {
-				const subjects = SubjectsCache.get(cachedProfile.branch, cachedProfile.year, cachedProfile.semester)
-				subjectsCount = subjects?.length || 0
-			}
-			console.log('[DEBUG] ProfileContext cache status:', {
-				hasCachedProfile: !!cachedProfile,
-				hasCachedStatic: !!cachedStatic,
-				hasCachedDynamic: !!cachedDynamic,
-				hasCachedSubjects: subjectsCount > 0,
-				subjectsCount
-			})
-		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [session?.user?.email, status])
+	}, [])
 
 	// Simple fetch with optional retry/backoff for transient failures
 	const fetchWithRetry = async (url: string, init: RequestInit, retries: number, backoffMs: number) => {
@@ -211,37 +160,37 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		}
 	}
 
-	const fetchBulkData = async (showLoading = true) => {
-		if (status !== 'authenticated' || !session?.user?.email) return
-		const email = session.user?.email
-		if (!email) return
+	const fetchBulkData = async (showLoading = true, currentProfileOverride?: Profile) => {
+		const currentP = currentProfileOverride || profile
+		if (!currentP) return
 
 		if (showLoading) setLoading(true)
 		setError(null)
 
 		try {
-			const stopTimer = PerfMon.startOperation('api:bulk-fetch')
+			const params = new URLSearchParams()
+			if (currentP.branch) params.set('branch', currentP.branch)
+			if (currentP.year) params.set('year', String(currentP.year))
+			if (currentP.semester) params.set('semester', String(currentP.semester))
+			if (currentP.branch_id) params.set('branch_id', currentP.branch_id)
+			if (currentP.year_id) params.set('year_id', currentP.year_id)
+			if (currentP.semester_id) params.set('semester_id', currentP.semester_id)
+
 			const response = await fetchWithRetry(
-				'/api/bulk-academic-data',
+				`/api/bulk-academic-data?${params.toString()}`,
 				{ cache: 'no-store' },
 				// Retry only when user is waiting (showLoading)
 				showLoading ? 2 : 0,
 				500
 			)
-			PerfMon.incrementApiCalls(1)
 			if (!response.ok) throw new Error('Failed to fetch data')
 
 			const data = await response.json()
-			try {
-				const durationMs = stopTimer()
-				if (process.env.NODE_ENV !== 'production') {
-					// eslint-disable-next-line no-console
-					console.log('[PerfMon] bulk-fetch', Math.round(durationMs), 'ms', PerfMon.getSnapshot())
-				}
-			} catch (_) { }
 
-			// Update state
-			setProfile(data.profile)
+			// Update state - keep existing profile (local), update everything else
+			// IF the API returned a profile (it shouldn't now, but just in case), we ignore it or merge?
+			// We ignore it because local storage is source of truth for profile identity.
+
 			setSubjects(Array.isArray(data.subjects) ? data.subjects : [])
 			setStaticData((data.static as EnhancedProfileStaticData) ?? null)
 			setDynamicData((data.dynamic as EnhancedProfileDynamicData) ?? null)
@@ -249,27 +198,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 			setWarnings(Array.isArray(data.contextWarnings) ? data.contextWarnings : null)
 
 			// Update caches
-			ProfileCache.set(email, data.profile)
-			try {
-				ProfileDisplayCache.set(email, data.profile)
-			} catch (err) {
-				if (process.env.NODE_ENV !== 'production') {
-					// eslint-disable-next-line no-console
-					console.warn('ProfileDisplayCache.set failed', { email }, err)
-				}
-			}
 			StaticCache.set(data.static)
 			DynamicCache.set(data.dynamic)
 
 			if (
-				data.profile?.branch &&
-				data.profile?.year &&
-				data.profile?.semester
+				currentP.branch &&
+				currentP.year &&
+				currentP.semester
 			) {
 				SubjectsCache.set(
-					data.profile.branch,
-					data.profile.year,
-					data.profile.semester,
+					currentP.branch,
+					currentP.year,
+					currentP.semester,
 					Array.isArray(data.subjects) ? data.subjects : []
 				)
 			}
@@ -298,10 +238,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 	// Simple invalidation on user actions
 	const refreshProfile = async () => {
-		if (!session?.user?.email) return
-		ProfileCache.clear()
-		try { ProfileDisplayCache.clear() } catch (_) { }
-		await fetchBulkData(true)
+		// Technically profile is local, so "refreshing" it just means re-reading local storage?
+		// Or re-fetching dependent data.
+		const localProfile = LocalProfileService.get()
+		if (localProfile) {
+			// Update in-memory profile incase local storage changed
+			const convertedProfile: Profile = {
+				id: localProfile.roll_number,
+				name: localProfile.name,
+				email: localProfile.email || 'local-user',
+				roll_number: localProfile.roll_number,
+				branch: localProfile.branch,
+				year: localProfile.year,
+				semester: localProfile.semester,
+				section: localProfile.section,
+				role: 'student',
+				branch_id: localProfile.branch_id,
+				year_id: localProfile.year_id,
+				semester_id: localProfile.semester_id,
+			}
+			setProfile(convertedProfile)
+			await fetchBulkData(true, convertedProfile)
+		}
 	}
 
 	const refreshSubjects = async () => {
@@ -314,15 +272,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		if (process.env.NODE_ENV !== 'production') {
 			console.log('[DEBUG] Force refresh triggered')
 		}
-		ProfileCache.clear()
 		StaticCache.clear()
 		DynamicCache.clear()
-		try { ProfileDisplayCache.clear() } catch (_) { }
 		ResourcesCache.clearAll()
 		if (profile && profile.branch && profile.year && profile.semester) {
 			SubjectsCache.clearForContext(profile.branch, profile.year, profile.semester)
 		}
 		await fetchBulkData(true)
+	}
+
+	const logout = () => {
+		LocalProfileService.clear()
+		setProfile(null)
+		// Clear all caches
+		StaticCache.clear()
+		DynamicCache.clear()
+		SubjectsCache.clearAll()
+		ResourcesCache.clearAll()
+
+		router.push('/login') // Or onboarding? User said remove everything related to login.
+		// But for now, maybe onboarding is better if "no login".
+		// Actually, if we clear profile, we should redirect to onboarding.
+		router.push('/onboarding')
 	}
 
 	// Refresh dynamic data on tab visibility change if cache expired
@@ -349,7 +320,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 	}, [profile])
 
 
-
 	return (
 		<ProfileContext.Provider
 			value={{
@@ -363,7 +333,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 				warnings,
 				refreshProfile,
 				refreshSubjects,
-				forceRefresh
+				forceRefresh,
+				logout
 			}}
 		>
 			{children}
@@ -378,5 +349,3 @@ export function useProfile() {
 	}
 	return context
 }
-
-

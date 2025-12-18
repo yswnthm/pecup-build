@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { NextResponse, NextRequest } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase'
 import { AcademicConfigManager } from '@/lib/academic-config'
 import { getOrSetCache } from '@/lib/redis'
@@ -18,12 +16,16 @@ function errorResponse(code: string, message: string, status: number) {
   )
 }
 
-export async function GET() {
-  const session = await getServerSession(authOptions)
-  const email = session?.user?.email?.toLowerCase()
-  if (!email) {
-    return errorResponse('UNAUTHORIZED', 'Unauthorized', 401)
-  }
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const paramBranchCode = searchParams.get('branch')
+  const paramYearString = searchParams.get('year')
+  const paramSemesterString = searchParams.get('semester')
+
+  // These IDs are needed to fetch resources properly if we want to filter by them
+  const paramBranchId = searchParams.get('branch_id')
+  const paramYearId = searchParams.get('year_id')
+  const paramSemesterId = searchParams.get('semester_id')
 
   const startTime = Date.now()
   const t = {
@@ -34,71 +36,34 @@ export async function GET() {
     dynamicMs: 0,
     resourcesMs: 0,
   }
+
   try {
     const supabase = createSupabaseAdmin()
     const academicConfig = AcademicConfigManager.getInstance()
 
-    // Fetch profile with relations
-    const profileRow = await getOrSetCache(
-      `profile:${email}`,
-      300, // 5 minutes
-      async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            id, roll_number, name, email, branch_id, year_id, semester_id, section, role,
-            branch:branches(id, name, code),
-            year:years(id, batch_year, display_name),
-            semester:semesters(id, semester_number)
-          `)
-          .eq('email', email)
-          .maybeSingle()
+    // We no longer rely on DB profile. 
+    // We expect the client to strictly provide the context.
 
-        if (error) throw error
-        return data
-      }
-    )
-    t.profileMs = Date.now() - t.profileStart
+    // However, for backward compatibility or robust data fetching, we try to interpret what we have.
+    const currentYear = paramYearString ? parseInt(paramYearString) : null
+    const semesterNumber = paramSemesterString ? parseInt(paramSemesterString) : null
+    const branchCode = paramBranchCode
 
-    if (!profileRow) {
-      return errorResponse('PROFILE_NOT_FOUND', 'Profile not found', 404)
-    }
+    // IDs for resource fetching
+    const branchId = paramBranchId
+    const yearId = paramYearId
+    const semesterId = paramSemesterId
 
-    // Handle Supabase relation shapes that may come as arrays or objects
-    const yearRel: any = Array.isArray((profileRow as any).year)
-      ? (profileRow as any).year?.[0]
-      : (profileRow as any).year
-    const branchRel: any = Array.isArray((profileRow as any).branch)
-      ? (profileRow as any).branch?.[0]
-      : (profileRow as any).branch
-    const semesterRel: any = Array.isArray((profileRow as any).semester)
-      ? (profileRow as any).semester?.[0]
-      : (profileRow as any).semester
+    t.profileMs = 0 // Skipped profile fetch
 
-    const currentYear = yearRel?.batch_year
-      ? await academicConfig.calculateAcademicYear(yearRel.batch_year)
-      : null
-    const branchCode = branchRel?.code || null
-    const semesterNumber = semesterRel?.semester_number || null
-
-    const branchId = profileRow.branch_id
-    const yearId = profileRow.year_id
-    const semesterId = profileRow.semester_id
-
-    // Defensive: If missing critical context, advise re-auth workflow in message
-    const contextWarnings: string[] = []
-    if (!branchCode || !currentYear || !semesterNumber) {
-      contextWarnings.push('Missing branch/year/semester context. If this persists, please log out and log in again to refresh your profile data.')
-    }
-
-    // Fetch subjects using subject_offerings with dynamic regulation (do not hardcode)
+    // Fetch subjects using subject_offerings
     const subjectsPromise = (async () => {
       const secStart = Date.now()
       if (!branchCode || !currentYear || !semesterNumber) return { data: [] as any[] }
 
       const cacheKey = `subjects:${branchCode}:${currentYear}:${semesterNumber}`
       const result = await getOrSetCache(cacheKey, 3600, async () => { // 1 hour
-        // Try to detect latest regulation from offerings for this context, fall back to most recent by created_at
+        // Try to detect latest regulation from offerings for this context
         const { data: regs } = await supabase
           .from('subject_offerings')
           .select('regulation')
@@ -147,7 +112,7 @@ export async function GET() {
           console.error('[bulk] subjects query error:', subjectsErr)
           return { data: [] as any[] }
         }
-        // Sort by display_order using offerings order mapping, treating nulls as smaller than numbers, with id tiebreaker for equals including nulls
+        // Sort by display_order
         const orderMap = new Map<string, number | null>(offerings.map(o => [o.subject_id, o.display_order]))
         const sorted = (subjects || []).slice().sort((a: any, b: any) => {
           const oa = orderMap.get(a.id)
@@ -209,7 +174,7 @@ export async function GET() {
           recentUpdatesQuery = recentUpdatesQuery.eq('branch', branchCode).eq('year', currentYear)
         }
 
-        // exams: filter by branch/year when available, then by date window
+        // exams
         let examsQuery = supabase
           .from('exams')
           .select('subject, exam_date, year, branch')
@@ -219,7 +184,7 @@ export async function GET() {
         if (branchCode) examsQuery = examsQuery.eq('branch', branchCode)
         if (currentYear) examsQuery = examsQuery.eq('year', currentYear)
 
-        // reminders: filter by context when available; else return latest upcoming by due_date
+        // reminders
         let remindersQuery = supabase
           .from('reminders')
           .select('*')
@@ -245,6 +210,7 @@ export async function GET() {
     })()
 
     // Resources data
+    // Requires IDs
     const resourcesPromise = (async () => {
       const secStart = Date.now()
       if (!branchId || !yearId || !semesterId) return {}
@@ -291,18 +257,10 @@ export async function GET() {
     const [branches, years, semesters] = staticResults
     const { recentUpdates, upcomingExams, upcomingReminders, usersCount } = dynamicResults
 
+    // Construct response
+    // We return profile: null to indicate no DB profile was fetched
     const responseBody = {
-      profile: {
-        id: profileRow.id,
-        roll_number: profileRow.roll_number,
-        name: profileRow.name,
-        email: profileRow.email,
-        section: profileRow.section,
-        role: profileRow.role,
-        year: currentYear ?? null,
-        branch: branchCode ?? null,
-        semester: semesterNumber ?? null
-      },
+      profile: null,
       subjects: subjectsResult.data || [],
       static: {
         branches: branches?.data || [],
@@ -316,7 +274,7 @@ export async function GET() {
         usersCount: usersCount || 0
       },
       resources: resourcesResult || {},
-      contextWarnings,
+      contextWarnings: [], // No DB warnings
       timestamp: Date.now(),
       meta: {
         loadedInMs: Date.now() - startTime,
@@ -337,5 +295,3 @@ export async function GET() {
     return errorResponse('INTERNAL_ERROR', message, 500)
   }
 }
-
-

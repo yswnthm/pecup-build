@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ResourcesCache } from '@/lib/simple-cache'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { PerfMon } from '@/lib/performance-monitor'
@@ -17,12 +16,11 @@ type CacheStatus = {
 
 export function CacheDebugger() {
   const isDev = process.env.NODE_ENV === 'development'
-  const { data: session } = useSession()
   const { profile, resources: bulkResources } = useProfile()
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState<CacheStatus | null>(null)
   const [metrics, setMetrics] = useState(PerfMon.getSnapshot())
-  const email = session?.user?.email ?? null
+  const email = profile?.email ?? null
 
   const subjectsContext = useMemo(() => {
     if (profile && typeof profile.year === 'number' && profile.year > 0 && profile.branch && profile.semester) {
@@ -260,4 +258,3 @@ export function CacheDebugger() {
 }
 
 export default CacheDebugger
-

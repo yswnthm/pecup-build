@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LocalProfileService } from '@/lib/local-profile'
 
 type BranchType = 'CSE' | 'AIML' | 'DS' | 'AI' | 'ECE' | 'EEE' | 'MEC' | 'CE'
 const BRANCHES: BranchType[] = ['CSE', 'AIML', 'DS', 'AI', 'ECE', 'EEE', 'MEC', 'CE']
@@ -18,7 +18,7 @@ const BRANCHES: BranchType[] = ['CSE', 'AIML', 'DS', 'AI', 'ECE', 'EEE', 'MEC', 
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  // Removed useSession
   const { profile, loading: profileLoading, error: profileError, refreshProfile } = useProfile()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -30,10 +30,13 @@ export default function ProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (status !== 'loading' && status === 'unauthenticated') {
-      router.replace('/login')
+    // If we're fully loaded and have no profile, redirect to onboarding.
+    // ProfileContext handles this too, but for good measure on the specialized profile page:
+    if (!profileLoading && !profile) {
+      router.replace('/onboarding')
     }
-  }, [status, router])
+  }, [profile, profileLoading, router])
+
 
   useEffect(() => {
     // Use cached profile data from context
@@ -42,11 +45,8 @@ export default function ProfilePage() {
       setYear(profile.year ?? undefined)
       setBranch((profile.branch as BranchType | null) || '')
       setRollNumber(profile.roll_number || '')
-    } else if (profileError && status === 'authenticated') {
-      // If profile missing, send to onboarding
-      router.replace('/onboarding')
     }
-  }, [profile, profileError, status, router])
+  }, [profile])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,21 +75,21 @@ export default function ProfilePage() {
         throw new Error(mappingJson?.error || 'Failed to map branch/year data')
       }
 
-      const response = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          branch_id: mappingJson.branch_id,
-          year_id: mappingJson.year_id,
-          semester_id: mappingJson.semester_id,
-          roll_number: rollNumber
-        }),
+      // Update LOCAL storage
+      LocalProfileService.save({
+        name,
+        roll_number: rollNumber,
+        branch,
+        year,
+        semester: 1, // Keep or update if UI allows
+        branch_id: mappingJson.branch_id,
+        year_id: mappingJson.year_id,
+        semester_id: mappingJson.semester_id,
+        // email?
       })
-      const json = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(json?.error || 'Failed to save profile')
-      }
+
+      // Removed POST to /api/profile as we are local-only now.
+
       setSuccess('Profile updated successfully!')
       // Refetch profile to update context
       await refreshProfile()
@@ -103,7 +103,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (status === 'loading' || profileLoading) {
+  if (profileLoading) {
     return (
       <div className="mx-auto max-w-xl">
         <Card>
@@ -118,13 +118,13 @@ export default function ProfilePage() {
                 <Skeleton className="h-4 w-12" />
                 <Skeleton className="h-10 w-full" />
               </div>
-              
+
               {/* Name field skeleton */}
               <div className="space-y-2">
                 <Skeleton className="h-4 w-12" />
                 <Skeleton className="h-10 w-full" />
               </div>
-              
+
               {/* Year and Branch fields skeleton */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -136,13 +136,13 @@ export default function ProfilePage() {
                   <Skeleton className="h-10 w-full" />
                 </div>
               </div>
-              
+
               {/* Roll number field skeleton */}
               <div className="space-y-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-10 w-full" />
               </div>
-              
+
               {/* Buttons skeleton */}
               <div className="flex gap-3">
                 <Skeleton className="h-10 w-28" />
@@ -174,10 +174,8 @@ export default function ProfilePage() {
             </Alert>
           )}
           <form className="space-y-4" onSubmit={onSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" value={session?.user?.email ?? ''} disabled />
-            </div>
+            {/* Removed Email Field as no session */}
+
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -226,5 +224,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-

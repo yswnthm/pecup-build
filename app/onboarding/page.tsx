@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,13 +9,13 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Loader from '@/components/Loader'
+import { LocalProfileService } from '@/lib/local-profile'
 
 type BranchType = 'CSE' | 'AIML' | 'DS' | 'AI' | 'ECE' | 'EEE' | 'MEC' | 'CE'
 const BRANCHES: BranchType[] = ['CSE', 'AIML', 'DS', 'AI', 'ECE', 'EEE', 'MEC', 'CE']
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
 
   const [name, setName] = useState('')
   const [year, setYear] = useState<number | undefined>(undefined)
@@ -25,10 +24,15 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Pre-fill if we have something in local storage
   useEffect(() => {
-    if (status === 'unauthenticated') router.replace('/login')
-    if (status === 'authenticated' && session?.user?.name && !name) setName(session.user.name)
-  }, [status, session, router, name])
+    const existing = LocalProfileService.get()
+    if (existing) {
+      if (!name && existing.name) setName(existing.name)
+      if (!rollNumber && existing.roll_number) setRollNumber(existing.roll_number)
+      // Others optional
+    }
+  }, [name, rollNumber])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +44,7 @@ export default function OnboardingPage() {
         throw new Error('All fields are required')
       }
 
-      // Map frontend data to database IDs via API
+      // Map frontend data to database IDs via API (for data consistency with backend resources)
       const mappingResponse = await fetch('/api/mapping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,30 +56,26 @@ export default function OnboardingPage() {
       })
 
       const mappingJson = await mappingResponse.json()
-      console.log('Mapping API response:', { status: mappingResponse.status, mappingJson })
+
       if (!mappingResponse.ok) {
         throw new Error(mappingJson?.error || 'Failed to map branch/year data')
       }
 
-      console.log('Mapping response:', mappingJson)
-
-      const response = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          branch_id: mappingJson.branch_id,
-          year_id: mappingJson.year_id,
-          semester_id: mappingJson.semester_id,
-          roll_number: rollNumber
-        }),
+      // Save locally
+      LocalProfileService.save({
+        name,
+        roll_number: rollNumber,
+        branch,
+        year,
+        semester: 1,
+        branch_id: mappingJson.branch_id,
+        year_id: mappingJson.year_id,
+        semester_id: mappingJson.semester_id,
+        // email: optional
       })
-      const json = await response.json().catch(() => ({}))
-      console.log('Profile API response:', { status: response.status, json })
-      if (!response.ok) {
-        throw new Error(json?.error || 'Failed to save profile')
-      }
+
       router.replace('/home')
+
     } catch (err: any) {
       console.error('Profile creation error:', err)
       setError(err.message || 'Something went wrong')
@@ -84,7 +84,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (status === 'loading' || isSubmitting) {
+  if (isSubmitting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader />
@@ -93,11 +93,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-xl p-4">
       <Card>
         <CardHeader>
           <CardTitle>Complete your profile</CardTitle>
-          <CardDescription>We use this to personalize your experience</CardDescription>
+          <CardDescription>We use this to personalize your experience. No login required.</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -107,12 +107,8 @@ export default function OnboardingPage() {
           )}
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" value={session?.user?.email ?? ''} disabled />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Your Name" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -146,7 +142,7 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="roll">Roll number</Label>
-              <Input id="roll" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} required />
+              <Input id="roll" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} required placeholder="Roll Number" />
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : 'Save and continue'}
@@ -157,5 +153,3 @@ export default function OnboardingPage() {
     </div>
   )
 }
-
-

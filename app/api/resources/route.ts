@@ -3,8 +3,6 @@
 // Modified to support fetching resources from all units when no unit parameter is specified
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { createSupabaseAdmin } from '@/lib/supabase';
 import { Resource, ResourceFilters } from '@/lib/types';
 import { academicConfig } from '@/lib/academic-config';
@@ -36,24 +34,9 @@ export async function GET(request: Request) {
 
   let subject = '';
   try {
-    // Enforce student profile filtering by default (RBAC)
-    // If caller didn't provide branch/year/semester, infer from the logged-in user's student profile
+    // If caller didn't provide branch/year/semester, warn (we don't check session anymore)
     if (!branch_id || !year_id || !semester_id) {
-      const session = await getServerSession(authOptions);
-      const email = session?.user?.email?.toLowerCase();
-      if (email) {
-        const { data: prof } = await supabaseAdmin
-          .from('profiles')
-          .select('branch_id, year_id, semester_id')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (prof) {
-          branch_id = branch_id || (prof as any).branch_id;
-          year_id = year_id || (prof as any).year_id;
-          semester_id = semester_id || (prof as any).semester_id;
-        }
-      }
+      console.warn('API Route: Missing branch_id, year_id, or semester_id params. May return empty or filtered results.');
     }
 
     // Legacy support: convert old branch/year/semester params to IDs
@@ -155,10 +138,10 @@ export async function GET(request: Request) {
       .order('unit', { ascending: true })
       .order('created_at', { ascending: false });
 
-   // Apply unit filter only if specified
-   if (unitNumber !== null) {
-     query = query.eq('unit', unitNumber);
-   }
+    // Apply unit filter only if specified
+    if (unitNumber !== null) {
+      query = query.eq('unit', unitNumber);
+    }
 
     // Get user's branch and year info for common subject checking
     let userBranchCode = '';
@@ -209,11 +192,11 @@ export async function GET(request: Request) {
     }
 
     if (year_id) {
-       query = query.eq('year_id', year_id);
+      query = query.eq('year_id', year_id);
     }
     if (semester_id) {
-        query = query.or(`semester_id.eq.${semester_id},semester_id.is.null`);
-     }
+      query = query.or(`semester_id.eq.${semester_id},semester_id.is.null`);
+    }
 
     console.log(`API Route: Applied filters - branch_id: ${branch_id}, year_id: ${year_id}, semester_id: ${semester_id}, unit: ${unitNumber}`);
 
@@ -229,30 +212,30 @@ export async function GET(request: Request) {
 
     // Transform the data to match both new and legacy expected formats
     const transformedResources = (resources || []).map(resource => ({
-       id: resource.id,
-       name: resource.name,
-       title: resource.name, // Keep both for compatibility
-       description: resource.description || '',
-       drive_link: resource.drive_link,
-       url: resource.url,
-       file_type: resource.type,
-       type: resource.type,
-       branch_id: resource.branch_id,
-       year_id: resource.year_id,
-       semester_id: resource.semester_id,
-       uploader_id: resource.created_by,
-       created_at: resource.created_at,
-       // Legacy fields for backward compatibility
-       category: resource.category,
-       subject: resource.subject,
-       unit: resource.unit,
-       date: resource.date || resource.created_at,
-       is_pdf: resource.is_pdf,
-       // Include relationship data (now single objects)
-       branch: Array.isArray(resource.branch) ? resource.branch[0] : resource.branch,
-       year: Array.isArray(resource.year) ? resource.year[0] : resource.year,
-       semester: Array.isArray(resource.semester) ? resource.semester[0] : resource.semester
-     }));
+      id: resource.id,
+      name: resource.name,
+      title: resource.name, // Keep both for compatibility
+      description: resource.description || '',
+      drive_link: resource.drive_link,
+      url: resource.url,
+      file_type: resource.type,
+      type: resource.type,
+      branch_id: resource.branch_id,
+      year_id: resource.year_id,
+      semester_id: resource.semester_id,
+      uploader_id: resource.created_by,
+      created_at: resource.created_at,
+      // Legacy fields for backward compatibility
+      category: resource.category,
+      subject: resource.subject,
+      unit: resource.unit,
+      date: resource.date || resource.created_at,
+      is_pdf: resource.is_pdf,
+      // Include relationship data (now single objects)
+      branch: Array.isArray(resource.branch) ? resource.branch[0] : resource.branch,
+      year: Array.isArray(resource.year) ? resource.year[0] : resource.year,
+      semester: Array.isArray(resource.semester) ? resource.semester[0] : resource.semester
+    }));
 
     console.log(`API Route: Returning ${transformedResources.length} resources`);
     console.log(`API Route: Transformed resources sample (first 2 for debug):`, transformedResources.slice(0, 2));
