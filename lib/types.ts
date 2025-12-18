@@ -331,22 +331,5 @@ export interface UserPermissions {
     branchIds?: string[];
     yearIds?: string[];
   };
-// Prime Section Data Types
-export interface PrimeSectionResource {
-  name: string;
-  description: string;
-  date: string;
-  type: string;
-  url: string;
 }
 
-export interface PrimeSectionGroupedResources {
-  notes: Record<string, PrimeSectionResource[]>;
-  assignments: Record<string, PrimeSectionResource[]>;
-  papers: Record<string, PrimeSectionResource[]>;
-}
-
-export interface PrimeSectionData {
-  data: PrimeSectionGroupedResources | null;
-  triggeringSubjects: string[];
-}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from "next/link"
 import { motion } from 'framer-motion'
-import { FileText, BookOpen, FileCheck, Database, Users, Loader2, Star, ExternalLink, CalendarDays, Clock, Edit, FileQuestion, AlertCircle } from "lucide-react"
+import { FileText, BookOpen, FileCheck, Database, Users, Loader2, ExternalLink, CalendarDays, Clock, Edit, FileQuestion, AlertCircle } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from '@/components/ui/badge'
@@ -33,22 +33,7 @@ interface RecentUpdate {
   description?: string
 }
 
-interface GroupedResourceItem {
-  id: string | number
-  title: string
-  url: string
-}
 
-interface GroupedResources {
-  notes: Record<string, GroupedResourceItem[]>
-  assignments: Record<string, GroupedResourceItem[]>
-  papers: Record<string, GroupedResourceItem[]>
-}
-
-interface PrimeDataResponse {
-  data: GroupedResources | null
-  triggeringSubjects: string[]
-}
 
 const SHOW_ACTUAL_USER_COUNT = true;
 
@@ -67,9 +52,7 @@ export default function HomePage() {
   const [isLoadingUpdates, setIsLoadingUpdates] = useState(true)
   const [updatesError, setUpdatesError] = useState<string | null>(null)
 
-  const [primeData, setPrimeData] = useState<PrimeDataResponse | null>(null)
-  const [isLoadingPrime, setIsLoadingPrime] = useState(true)
-  const [primeError, setPrimeError] = useState<string | null>(null)
+
 
   // Construct query params for resource links
   const query = useMemo(() => {
@@ -99,7 +82,7 @@ export default function HomePage() {
 
   // Confetti Logic
   useEffect(() => {
-    if (!loading && !isLoadingPrime && usersCount >= 300) {
+    if (!loading && usersCount >= 300) {
       const hasSeenConfetti = localStorage.getItem('confetti_seen_300')
       if (!hasSeenConfetti) {
         setTimeout(() => {
@@ -108,9 +91,9 @@ export default function HomePage() {
         }, 500)
       }
     }
-  }, [loading, isLoadingPrime, usersCount])
+  }, [loading, usersCount])
 
-  // Data Fetching Logic (Updates & Prime)
+  // Data Fetching Logic (Updates)
   useEffect(() => {
     let isMounted = true
 
@@ -137,40 +120,9 @@ export default function HomePage() {
         }
       }
 
-      const fetchPrimeSectionData = async () => {
-        setIsLoadingPrime(true)
-        setPrimeError(null)
-        setPrimeData(null)
-        try {
-          const queryParams = new URLSearchParams({
-            branch: profile.branch || '',
-            year: profile.year?.toString() || ''
-          }).toString()
-          const response = await fetch(`/api/prime-section-data?${queryParams}`)
-
-          if (!response.ok) {
-            const errorBody = await response.json().catch(() => ({}))
-            throw new Error(`Prime Section fetch failed: ${response.status} - ${errorBody?.error || 'Unknown error'}`)
-          }
-          const data: PrimeDataResponse = await response.json()
-          // Basic validation
-          if (typeof data !== 'object' || data === null || !('data' in data) || !('triggeringSubjects' in data) || !Array.isArray((data as any).triggeringSubjects)) {
-            throw new Error('Invalid prime section data format received from API.')
-          }
-          if (isMounted) setPrimeData(data)
-        } catch (error: any) {
-          console.error('Error fetching prime section data:', error)
-          if (isMounted) setPrimeError(error.message || 'An error occurred loading prime section data.')
-        } finally {
-          if (isMounted) setIsLoadingPrime(false)
-        }
-      }
-
       fetchUpdates()
-      fetchPrimeSectionData()
     } else if (!loading && !profile) {
       if (isMounted) setIsLoadingUpdates(false)
-      if (isMounted) setIsLoadingPrime(false)
     }
 
     return () => {
@@ -187,14 +139,14 @@ export default function HomePage() {
   })
 
   useEffect(() => {
-    if (!loading && !isLoadingPrime) {
+    if (!loading) {
       sessionStorage.setItem('dashboard_loaded', 'true')
       setIsInitialLoad(false)
     }
-  }, [loading, isLoadingPrime])
+  }, [loading])
 
   // Loading View
-  if (loading || isLoadingPrime) {
+  if (loading) {
     if (isInitialLoad) {
       return (
         <div className="fixed inset-0 z-[100] flex justify-center items-center bg-background">
@@ -356,138 +308,10 @@ export default function HomePage() {
         </CardContent>
       </Card>
 
-      {/* Prime Section */}
-      {/* Loading */}
-      {isLoadingPrime && (
-        <div className="mt-8 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading Exam Prep Section...
-        </div>
-      )}
-      {/* Error */}
-      {primeError && !isLoadingPrime && (
-        <Alert variant="destructive" className="mt-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error Loading Exam Prep Section</AlertTitle>
-          <AlertDescription>{primeError}</AlertDescription>
-        </Alert>
-      )}
-      {/* Content */}
-      {!isLoadingPrime && !primeError && primeData && primeData.data && (
-        <div className="mt-8">
-          <Card className="border-l-4 border-yellow-500 bg-yellow-50/30 dark:bg-yellow-900/10">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Star className="h-6 w-6 text-yellow-600" />
-                <CardTitle className="text-xl">Prime Section</CardTitle>
-              </div>
-              <CardDescription>
-                Showing key resources for upcoming exam(s) in: <span className="font-medium capitalize">{primeData.triggeringSubjects.join(', ')}</span>.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Notes */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" /> Notes
-                  </h3>
-                  {primeData.data.notes && Object.keys(primeData.data.notes).length > 0 ? (
-                    Object.entries(primeData.data.notes).map(([groupKey, items]) => (
-                      <div key={`notes-${groupKey}`}>
-                        <h4 className="font-medium mb-1">{groupKey}</h4>
-                        <ul className="space-y-1 list-none pl-2">
-                          {items.map((item) => (
-                            <li key={item.id}>
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-muted-foreground hover:text-primary hover:underline flex items-center gap-1.5 group"
-                              >
-                                <ExternalLink className="h-3 w-3 opacity-70 group-hover:opacity-100" />
-                                {item.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground pl-2 italic">No relevant notes found.</p>
-                  )}
-                </div>
 
-                {/* Assignments */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
-                    <Edit className="h-5 w-5 text-primary" /> Assignments
-                  </h3>
-                  {primeData.data.assignments && Object.keys(primeData.data.assignments).length > 0 ? (
-                    Object.entries(primeData.data.assignments).map(([groupKey, items]) => (
-                      <div key={`assign-${groupKey}`}>
-                        <h4 className="font-medium mb-1">{groupKey}</h4>
-                        <ul className="space-y-1 list-none pl-2">
-                          {items.map((item) => (
-                            <li key={item.id}>
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-muted-foreground hover:text-primary hover:underline flex items-center gap-1.5 group"
-                              >
-                                <ExternalLink className="h-3 w-3 opacity-70 group-hover:opacity-100" />
-                                {item.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground pl-2 italic">No relevant assignments found.</p>
-                  )}
-                </div>
-
-                {/* Papers */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
-                    <FileQuestion className="h-5 w-5 text-primary" /> Papers
-                  </h3>
-                  {primeData.data.papers && Object.keys(primeData.data.papers).length > 0 ? (
-                    Object.entries(primeData.data.papers).map(([groupKey, items]) => (
-                      <div key={`paper-${groupKey}`}>
-                        <h4 className="font-medium mb-1">{groupKey}</h4>
-                        <ul className="space-y-1 list-none pl-2">
-                          {items.map((item) => (
-                            <li key={item.id}>
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-muted-foreground hover:text-primary hover:underline flex items-center gap-1.5 group"
-                              >
-                                <ExternalLink className="h-3 w-3 opacity-70 group-hover:opacity-100" />
-                                {item.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground pl-2 italic">No relevant papers found.</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* No Exams Message */}
-      {!isLoadingPrime && !primeError && primeData && !primeData.data && (
-        <div className="mt-8 text-center text-muted-foreground italic text-sm">(No exams upcoming in the next few days)</div>
-      )}
+
 
       {error && (
         <Alert variant="destructive" className="mt-8">
