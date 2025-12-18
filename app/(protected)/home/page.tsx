@@ -1,34 +1,29 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useMemo, useState } from 'react'
+import Link from "next/link"
+import { motion } from 'framer-motion'
+import { FileText, BookOpen, FileCheck, Database, Users, Loader2, Star, ExternalLink, CalendarDays, Clock, Edit, FileQuestion, AlertCircle } from "lucide-react"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { triggerSideCannons } from '@/components/ui/button'
+
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
 import ChatBubble from '@/components/ChatBubble'
 import Hero from '@/components/Hero'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { BookOpen, Bell, Archive, Phone, AlertCircle, Loader2, Settings, Users, CalendarDays, Clock, Star, ExternalLink, FileText, Edit, FileQuestion } from 'lucide-react'
-import { useProfile, ProfileContextType, EnhancedProfileDynamicData } from '@/lib/enhanced-profile-context'
 import Loader from '@/components/Loader'
-import { triggerSideCannons } from '@/components/ui/button'
-import { motion } from 'framer-motion'
 
+import { useProfile } from '@/lib/enhanced-profile-context'
+
+// Types
 type Exam = {
   subject: string
   exam_date: string
   branch: string
   year: string
-}
-
-
-
-type Update = {
-  id: string
-  title?: string
-  created_at?: string
-  description?: string
 }
 
 interface RecentUpdate {
@@ -43,11 +38,13 @@ interface GroupedResourceItem {
   title: string
   url: string
 }
+
 interface GroupedResources {
   notes: Record<string, GroupedResourceItem[]>
   assignments: Record<string, GroupedResourceItem[]>
   papers: Record<string, GroupedResourceItem[]>
 }
+
 interface PrimeDataResponse {
   data: GroupedResources | null
   triggeringSubjects: string[]
@@ -58,6 +55,12 @@ const SHOW_ACTUAL_USER_COUNT = true;
 export default function HomePage() {
   const { profile, dynamicData, loading, error } = useProfile()
 
+  // State from Resources Page logic (for links)
+  const [year, setYear] = useState<number | 'all'>('all')
+  const [semester, setSemester] = useState<number | 'all'>('all')
+  const [branch, setBranch] = useState<string | ''>('')
+
+  // State from Home Page logic (for data)
   const [usersCount, setUsersCount] = useState<number>(0)
 
   const [updates, setUpdates] = useState<RecentUpdate[]>([])
@@ -68,19 +71,37 @@ export default function HomePage() {
   const [isLoadingPrime, setIsLoadingPrime] = useState(true)
   const [primeError, setPrimeError] = useState<string | null>(null)
 
+  // Construct query params for resource links
+  const query = useMemo(() => {
+    const p = new URLSearchParams()
+    if (year !== 'all') p.set('year', String(year))
+    if (semester !== 'all') p.set('semester', String(semester))
+    if (branch) p.set('branch', branch)
+    const s = p.toString()
+    return s ? `?${s}` : ''
+  }, [year, semester, branch])
+
+  // Sync state with profile
+  useEffect(() => {
+    if (profile) {
+      if (year === 'all') setYear(profile.year ?? ('all' as any))
+      if (semester === 'all') setSemester(1)
+      if (!branch && profile.branch) setBranch(profile.branch)
+    }
+  }, [profile, year, semester, branch])
+
+  // User Count Logic
   useEffect(() => {
     if (dynamicData?.usersCount) {
       setUsersCount(dynamicData.usersCount)
     }
   }, [dynamicData?.usersCount])
 
-  // Confetti effect when user count reaches 300 - triggers every page load after loading is complete
+  // Confetti Logic
   useEffect(() => {
     if (!loading && !isLoadingPrime && usersCount >= 300) {
       const hasSeenConfetti = localStorage.getItem('confetti_seen_300')
-
       if (!hasSeenConfetti) {
-        // Small delay to ensure the page is fully rendered
         setTimeout(() => {
           triggerSideCannons()
           localStorage.setItem('confetti_seen_300', 'true')
@@ -89,6 +110,7 @@ export default function HomePage() {
     }
   }, [loading, isLoadingPrime, usersCount])
 
+  // Data Fetching Logic (Updates & Prime)
   useEffect(() => {
     let isMounted = true
 
@@ -131,6 +153,7 @@ export default function HomePage() {
             throw new Error(`Prime Section fetch failed: ${response.status} - ${errorBody?.error || 'Unknown error'}`)
           }
           const data: PrimeDataResponse = await response.json()
+          // Basic validation
           if (typeof data !== 'object' || data === null || !('data' in data) || !('triggeringSubjects' in data) || !Array.isArray((data as any).triggeringSubjects)) {
             throw new Error('Invalid prime section data format received from API.')
           }
@@ -155,7 +178,7 @@ export default function HomePage() {
     }
   }, [loading, profile])
 
-  // Track if this is the initial page load (first visit this session)
+  // Initial Load Check
   const [isInitialLoad, setIsInitialLoad] = useState(() => {
     if (typeof window !== 'undefined') {
       return !sessionStorage.getItem('dashboard_loaded')
@@ -163,7 +186,6 @@ export default function HomePage() {
     return true
   })
 
-  // Mark as loaded once data is ready
   useEffect(() => {
     if (!loading && !isLoadingPrime) {
       sessionStorage.setItem('dashboard_loaded', 'true')
@@ -171,17 +193,15 @@ export default function HomePage() {
     }
   }, [loading, isLoadingPrime])
 
-  // Loading state - full-screen on initial load, centered on navigation
+  // Loading View
   if (loading || isLoadingPrime) {
     if (isInitialLoad) {
-      // Full-screen loading for initial page load
       return (
         <div className="fixed inset-0 z-[100] flex justify-center items-center bg-background">
           <Loader />
         </div>
       )
     }
-    // Centered loading for navigation (TopBar visible)
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader />
@@ -189,6 +209,7 @@ export default function HomePage() {
     )
   }
 
+  // Helpers
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'student':
@@ -204,85 +225,40 @@ export default function HomePage() {
     }
   }
 
-  const getNavigationCards = () => {
-    const cards = []
-
-    // Basic navigation for all users
-
-
-    cards.push(
-      <Link key="resources" href="/resources" className="block">
-        <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Resources</CardTitle>
-            <BookOpen className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <CardDescription>Access notes, assignments, papers, and records</CardDescription>
-          </CardContent>
-        </Card>
-      </Link>
-    )
-
-    // Archive for all users
-    cards.push(
-      <Link key="archive" href="/archive" className="block">
-        <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Archive</CardTitle>
-            <Archive className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <CardDescription>Previous semester materials and resources</CardDescription>
-          </CardContent>
-        </Card>
-      </Link>
-    )
-
-    // Management dashboard for representatives and admins
-    if (profile?.role === 'representative' || profile?.role === 'admin' || profile?.role === 'yeshh') {
-      const dashboardHref = profile.role === 'representative' ? '/dev-dashboard' : '/dashboard'
-      cards.push(
-        <Link key="dashboard" href={dashboardHref} className="block">
-          <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">Management</CardTitle>
-              <Settings className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                {profile.role === 'representative'
-                  ? 'Manage resources and promote semesters'
-                  : 'Admin dashboard for system management'
-                }
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </Link>
-      )
-    }
-
-    // Contact card - only show for non-representatives
-    if (profile?.role !== 'representative') {
-      cards.push(
-        <Link key="contact" href="/contact" className="block">
-          <Card className="h-full min-h-[180px] flex flex-col justify-center transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">Contact</CardTitle>
-              <Phone className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <CardDescription>Get in touch with administration</CardDescription>
-            </CardContent>
-          </Card>
-        </Link>
-      )
-    }
-
-    return cards
-  }
-
-  const navigationCards = getNavigationCards()
+  const categories = [
+    {
+      name: "Notes",
+      description: "Lecture notes and study materials",
+      icon: FileText,
+      path: "/resources/notes",
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+    },
+    {
+      name: "Assignments",
+      description: "Assignment questions all batches",
+      icon: BookOpen,
+      path: "/resources/assignments",
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+    },
+    {
+      name: "Papers",
+      description: "mid-1, mid-2, previous year papers",
+      icon: FileCheck,
+      path: "/resources/papers",
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+    },
+    {
+      name: "Records",
+      description: "records and manuals for specific weeks",
+      icon: Database,
+      path: "/resources/records",
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+    },
+  ]
 
   return (
     <motion.div
@@ -293,12 +269,12 @@ export default function HomePage() {
     >
       <Header />
 
-
       <div className="space-y-4">
+        {/* Top Bar */}
         <div className="flex items-center justify-between">
           <div>
             <Breadcrumb items={[
-              { label: "♡", isCurrentPage: true }
+              { label: "Home", isCurrentPage: true }
             ]} />
           </div>
           <div className="flex items-center gap-4">
@@ -314,8 +290,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Hero */}
         <Hero />
 
+        {/* Admin Access Info */}
         {(profile?.role === 'admin' || profile?.role === 'yeshh') && (
           <Card className="p-4">
             <h3 className="font-semibold mb-2">Admin Access</h3>
@@ -326,19 +305,65 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className={`grid gap-4 md:grid-cols-2 ${navigationCards.length === 1 ? 'lg:grid-cols-1 max-w-2xl mx-auto' :
-          navigationCards.length === 2 ? 'lg:grid-cols-2' :
-            navigationCards.length === 3 ? 'lg:grid-cols-3' :
-              'lg:grid-cols-4'
-        }`}>
-        {navigationCards}
+      {/* Main Grid - Resource Categories */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {categories.map((category) => (
+          <Link key={category.name} href={`${category.path}${query}`} className="block">
+            <Card className="h-full transition-all-smooth hover-lift">
+              <CardHeader className={`rounded-t-lg ${category.color}`}>
+                <div className="flex items-center gap-3">
+                  <category.icon className={`h-6 w-6 ${category.iconColor}`} />
+                  <CardTitle className="text-xl">{category.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <CardDescription className="text-sm">{category.description}</CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
+      {/* Useful Resources Card */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Useful Resources</CardTitle>
+          <CardDescription>mandatory and useful resources by PEC.UP</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2">
+            <li className="flex items-center gap-2 rounded-md p-2 hover:bg-muted transition-all duration-200">
+              <FileText className="h-4 w-4 text-primary" />
+              <span><a href="https://drive.google.com/file/d/1iVaySLAjlTKk_dABrmPhAQt3x1rrxuiI/view?usp=sharing">Syllabus</a></span>
+              <span className="ml-auto text-xs text-muted-foreground">28 October 2025</span>
+            </li>
+            <li className="flex items-center gap-2 rounded-md p-2 hover:bg-muted transition-all duration-200">
+              <BookOpen className="h-4 w-4 text-primary" />
+              <span><a href="https://drive.google.com/file/d/1R69NBdzUpX-h-HjOer63KTlhWfh2xymX/view?usp=sharing">Mid-1 Timetable</a></span>
+              <span className="ml-auto text-xs text-muted-foreground">28 October 2025</span>
+            </li>
+            <li className="flex items-center gap-2 rounded-md p-2 hover:bg-muted transition-all duration-200">
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span><a href="https://drive.google.com/file/d/1Noyor92EgQMpHARdUedBSy6GfOrMje24/view?usp=sharing">Mid-2 Timetable</a></span>
+              <span className="ml-auto text-xs text-muted-foreground">28 October 2025</span>
+            </li>
+            <li className="flex items-center gap-2 rounded-md p-2 hover:bg-muted transition-all duration-200">
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span><a href="https://drive.google.com/file/d/1wA2lhhJPucAxWxcRkeaj_meWTVJaHGai/view?usp=sharing">Sem Timetable</a></span>
+              <span className="ml-auto text-xs text-muted-foreground">10 November 2025</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Prime Section */}
+      {/* Loading */}
       {isLoadingPrime && (
         <div className="mt-8 flex items-center justify-center text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading Exam Prep Section...
         </div>
       )}
+      {/* Error */}
       {primeError && !isLoadingPrime && (
         <Alert variant="destructive" className="mt-8">
           <AlertCircle className="h-4 w-4" />
@@ -346,6 +371,7 @@ export default function HomePage() {
           <AlertDescription>{primeError}</AlertDescription>
         </Alert>
       )}
+      {/* Content */}
       {!isLoadingPrime && !primeError && primeData && primeData.data && (
         <div className="mt-8">
           <Card className="border-l-4 border-yellow-500 bg-yellow-50/30 dark:bg-yellow-900/10">
@@ -360,6 +386,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Notes */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" /> Notes
@@ -390,6 +417,7 @@ export default function HomePage() {
                   )}
                 </div>
 
+                {/* Assignments */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
                     <Edit className="h-5 w-5 text-primary" /> Assignments
@@ -420,6 +448,7 @@ export default function HomePage() {
                   )}
                 </div>
 
+                {/* Papers */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
                     <FileQuestion className="h-5 w-5 text-primary" /> Papers
@@ -455,6 +484,7 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* No Exams Message */}
       {!isLoadingPrime && !primeError && primeData && !primeData.data && (
         <div className="mt-8 text-center text-muted-foreground italic text-sm">(No exams upcoming in the next few days)</div>
       )}
@@ -467,6 +497,7 @@ export default function HomePage() {
         </Alert>
       )}
 
+      {/* Upcoming Exams (from dynamicData) */}
       {dynamicData?.upcomingExams && dynamicData.upcomingExams.length > 0 && (
         <div className="mt-8">
           <Card>
@@ -496,8 +527,7 @@ export default function HomePage() {
         </div>
       )}
 
-
-
+      {/* Recent Updates */}
       <div className="mt-8">
         <Card>
           <CardHeader>
@@ -537,6 +567,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
       </div>
+
       <ChatBubble href="https://chat.pecup.in" />
     </motion.div>
   )
