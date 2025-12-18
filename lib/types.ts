@@ -307,21 +307,21 @@ export interface SemesterPromotion {
 export interface UserPermissions {
   canRead: {
     resources: boolean;
-    reminders: boolean;
+
     recentUpdates: boolean;
     exams: boolean;
     profiles: boolean;
   };
   canWrite: {
     resources: boolean;
-    reminders: boolean;
+
     recentUpdates: boolean;
     exams: boolean;
     profiles: boolean;
   };
   canDelete: {
     resources: boolean;
-    reminders: boolean;
+
     recentUpdates: boolean;
     exams: boolean;
     profiles: boolean;

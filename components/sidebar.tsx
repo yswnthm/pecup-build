@@ -25,11 +25,7 @@ const routes = [
     path: "/",
     icon: Home,
   },
-  {
-    name: "Reminders",
-    path: "/reminders",
-    icon: Bell,
-  },
+
   {
     name: "Resources",
     path: "/resources",

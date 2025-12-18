@@ -22,12 +22,7 @@ type Exam = {
   year: string
 }
 
-type Reminder = {
-  id: string
-  title?: string
-  due_date?: string
-  completed?: boolean
-}
+
 
 type Update = {
   id: string
@@ -213,19 +208,7 @@ export default function HomePage() {
     const cards = []
 
     // Basic navigation for all users
-    cards.push(
-      <Link key="reminders" href="/reminders" className="block">
-        <Card className="h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Reminders</CardTitle>
-            <Bell className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <CardDescription>Important deadlines and announcements</CardDescription>
-          </CardContent>
-        </Card>
-      </Link>
-    )
+
 
     cards.push(
       <Link key="resources" href="/resources" className="block">
@@ -507,29 +490,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {dynamicData?.upcomingReminders && dynamicData.upcomingReminders.length > 0 && (
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                <CardTitle>Upcoming Reminders</CardTitle>
-              </div>
-              <CardDescription>Next deadlines for your context</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {dynamicData.upcomingReminders.map((r: Reminder) => (
-                  <div key={r.id} className="border-l-4 border-primary pl-4">
-                    <h3 className="font-medium">{r.title}</h3>
-                    <p className="text-sm text-muted-foreground">Due {r.due_date && typeof r.due_date === "string" && !isNaN(new Date(r.due_date).getTime()) ? new Date(r.due_date).toDateString() : "Invalid date"}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
 
       <div className="mt-8">
         <Card>

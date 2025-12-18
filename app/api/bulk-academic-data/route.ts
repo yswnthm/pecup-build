@@ -184,25 +184,15 @@ export async function GET(request: NextRequest) {
         if (branchCode) examsQuery = examsQuery.eq('branch', branchCode)
         if (currentYear) examsQuery = examsQuery.eq('year', currentYear)
 
-        // reminders
-        let remindersQuery = supabase
-          .from('reminders')
-          .select('*')
-          .is('deleted_at', null)
-          .gte('due_date', startDateStr)
-          .order('due_date', { ascending: true })
-          .limit(5)
-        if (branchCode && currentYear) {
-          remindersQuery = remindersQuery.eq('branch', branchCode).eq('year', currentYear)
-        }
 
-        const [recentUpdates, upcomingExams, upcomingReminders] = await Promise.all([
+
+        const [recentUpdates, upcomingExams] = await Promise.all([
           recentUpdatesQuery,
           examsQuery,
-          remindersQuery
+
         ])
 
-        return { recentUpdates, upcomingExams, upcomingReminders, usersCount }
+        return { recentUpdates, upcomingExams, usersCount }
       })
 
       t.dynamicMs = Date.now() - secStart
@@ -255,7 +245,7 @@ export async function GET(request: NextRequest) {
     t.subjectsMs = (subjectsResult as any)?._meta?.durationMs ?? t.subjectsMs
 
     const [branches, years, semesters] = staticResults
-    const { recentUpdates, upcomingExams, upcomingReminders, usersCount } = dynamicResults
+    const { recentUpdates, upcomingExams, usersCount } = dynamicResults
 
     // Construct response
     // We return profile: null to indicate no DB profile was fetched
@@ -270,7 +260,7 @@ export async function GET(request: NextRequest) {
       dynamic: {
         recentUpdates: recentUpdates?.data || [],
         upcomingExams: upcomingExams?.data || [],
-        upcomingReminders: upcomingReminders?.data || [],
+
         usersCount: usersCount || 0
       },
       resources: resourcesResult || {},
