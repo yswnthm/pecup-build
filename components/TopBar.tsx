@@ -3,12 +3,12 @@
 import { RefreshButton } from './RefreshButton'
 import { ThemeToggle } from './theme-toggle'
 import { Button } from '@/components/ui/button'
-import { LogOut, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { useRouter } from 'next/navigation'
 
 export function TopBar() {
-  const { profile, logout } = useProfile()
+  const { profile } = useProfile()
   const router = useRouter()
 
   const handleResetProfile = () => {
@@ -30,18 +30,10 @@ export function TopBar() {
               <RotateCcw className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Reset Year & Branch</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => logout()}
-            >
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
           </>
         )}
         <ThemeToggle />
       </div>
-    </div>
+    </div >
   )
 }

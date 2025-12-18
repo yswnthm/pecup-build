@@ -71,7 +71,7 @@ export interface ProfileContextType {
 	refreshProfile: () => Promise<void>
 	refreshSubjects: () => Promise<void>
 	forceRefresh: () => Promise<void>
-	logout: () => void
+
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
@@ -279,20 +279,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		await fetchBulkData(true)
 	}
 
-	const logout = () => {
-		LocalProfileService.clear()
-		setProfile(null)
-		// Clear all caches
-		StaticCache.clear()
-		DynamicCache.clear()
-		SubjectsCache.clearAll()
-		ResourcesCache.clearAll()
 
-		router.push('/login') // Or onboarding? User said remove everything related to login.
-		// But for now, maybe onboarding is better if "no login".
-		// Actually, if we clear profile, we should redirect to onboarding.
-		router.push('/onboarding')
-	}
 
 	// Refresh dynamic data on tab visibility change if cache expired
 	useEffect(() => {
@@ -332,7 +319,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 				refreshProfile,
 				refreshSubjects,
 				forceRefresh,
-				logout
+
 			}}
 		>
 			{children}
