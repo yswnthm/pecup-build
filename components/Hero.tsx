@@ -3,46 +3,12 @@
 import { useEffect, useState } from "react";
 
 export default function Hero() {
-  const [texts, setTexts] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  console.log("[Hero] Component mounted, starting fetch");
-  useEffect(() => {
-    let isMounted = true;
-
-    // Fetch hero texts from the database
-    console.log("[Hero] Fetching /api/hero");
-    fetch("/api/hero")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("[Hero] Received data:", data);
-        if (Array.isArray(data) && isMounted) {
-          console.log("[Hero] Setting texts from API:", data);
-          setTexts(data);
-          setIsLoading(false);
-        }
-      })
-      .catch((error) => {
-        console.log("[Hero] Using fallback texts");
-        console.error("Failed to fetch hero texts:", error);
-        // Fallback to default texts if API fails
-        if (isMounted) {
-          setTexts([
-            "New, way to access PEC.UP : starBOT",
-            "Ready for Mid-2?",
-            "Bored with studies? Not anymore!",
-            "resources that are actually useful",
-            "Made for students, by students!",
-          ]);
-          setIsLoading(false);
-          console.log("[Hero] Texts state changed:", texts);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const [texts, setTexts] = useState<string[]>([
+    "PEC.UP Welcomes You!!",
+    "looking for resources?",
+    "happy learning!",
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (texts.length === 0 || isLoading) return;
@@ -86,8 +52,8 @@ export default function Hero() {
         <div className="animated-text">
           <h1 id="typing-heading"></h1>
         </div>
-        <a href="https://forms.gle/hGWbDTLErrqPgQJs7" className="btn-project">
-          Feedback!!
+        <a href="/resources" className="btn-project">
+          resources?
         </a>
         <p className="centered-text">
           pickup by <span className="pickup">PEC.UP</span>
