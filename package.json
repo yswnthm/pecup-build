@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:sql": "node scripts/run-sql.js"
+    "db:sql": "bun scripts/run-sql.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",

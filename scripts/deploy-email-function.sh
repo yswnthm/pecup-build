@@ -27,11 +27,11 @@ echo "🚀 Starting Supabase Edge Function Deployment..."
 # 1. Link Supabase Project
 echo "🔗 Linking Supabase project (ID: $PROJECT_ID)..."
 echo "You may be asked for your database password."
-npx supabase link --project-ref "$PROJECT_ID"
+bun x supabase link --project-ref "$PROJECT_ID"
 
 # 2. Set Secrets
 echo "🔑 Setting secrets..."
-npx supabase secrets set RESEND_FROM_EMAIL="$SENDER_EMAIL"
+bun x supabase secrets set RESEND_FROM_EMAIL="$SENDER_EMAIL"
 
 echo "❓ Please paste your Resend API Key (starts with re_):"
 read -s RESEND_API_KEY
@@ -41,10 +41,10 @@ if [ -z "$RESEND_API_KEY" ]; then
   exit 1
 fi
 
-npx supabase secrets set RESEND_API_KEY="$RESEND_API_KEY"
+bun x supabase secrets set RESEND_API_KEY="$RESEND_API_KEY"
 
 # 3. Deploy Function
 echo "🚀 Deploying 'send-welcome-email' function..."
-npx supabase functions deploy send-welcome-email
+bun x supabase functions deploy send-welcome-email
 
 echo "✅ Deployment complete!"
