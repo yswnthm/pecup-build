@@ -1,3 +1,5 @@
+import { UrlBuilder } from "@/components/UrlBuilder"
+
 export default function Index() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8 space-y-8 font-sans">
@@ -33,6 +35,8 @@ export default function Index() {
             </div>
           </div>
         </div>
+
+        <UrlBuilder />
 
         <p className="text-xs text-muted-foreground pt-8">
           No onboarding required for direct links.
