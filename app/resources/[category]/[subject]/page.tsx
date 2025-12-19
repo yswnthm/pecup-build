@@ -421,7 +421,6 @@ export default function SubjectPage({
           <div>
             <Breadcrumb items={[
               { label: "Home", href: "/" },
-              { label: "Resources", href: "/resources" },
               { label: categoryTitle, href: `/resources/${category}` },
               { label: subjectName, isCurrentPage: true }
             ]} />

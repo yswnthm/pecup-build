@@ -52,7 +52,7 @@ export default function Hero() {
         <div className="animated-text">
           <h1 id="typing-heading"></h1>
         </div>
-        <a href="/resources" className="btn-project">
+        <a href="/home#resources" className="btn-project">
           resources?
         </a>
         <p className="centered-text">

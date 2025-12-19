@@ -247,7 +247,7 @@ export default function HomePage() {
       </div>
 
       {/* Main Grid - Resource Categories */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div id="resources" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((category) => (
           <Link key={category.name} href={`${category.path}${query}`} className="block">
             <Card className="h-full transition-all-smooth hover-lift">
