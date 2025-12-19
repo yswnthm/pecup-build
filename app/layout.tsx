@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 
 import { Providers } from "./providers" // ✅ Import Providers
-import WhatsAppJoinPopup from "@/components/WhatsAppJoinPopup"
 
 import { Analytics } from "@vercel/analytics/react"
 import { TopBar } from '@/components/TopBar'
@@ -31,8 +30,6 @@ export default function RootLayout({
           <div className="flex min-h-screen">
             <main className="flex-1 pt-0 md:pt-2 px-6 md:px-8 pb-6 md:pb-8">{children}</main>
           </div>
-
-          <WhatsAppJoinPopup />
         </Providers>
         <Analytics />
         <SpeedInsights />

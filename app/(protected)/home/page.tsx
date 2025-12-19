@@ -8,7 +8,7 @@ import { FileText, BookOpen, FileCheck, Database, Users, Loader2, ExternalLink, 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { triggerSideCannons } from '@/components/ui/button'
+
 
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
@@ -80,18 +80,7 @@ export default function HomePage() {
     }
   }, [dynamicData?.usersCount])
 
-  // Confetti Logic
-  useEffect(() => {
-    if (!loading && usersCount >= 300) {
-      const hasSeenConfetti = localStorage.getItem('confetti_seen_300')
-      if (!hasSeenConfetti) {
-        setTimeout(() => {
-          triggerSideCannons()
-          localStorage.setItem('confetti_seen_300', 'true')
-        }, 500)
-      }
-    }
-  }, [loading, usersCount])
+
 
   // Data Fetching Logic (Updates)
   useEffect(() => {
