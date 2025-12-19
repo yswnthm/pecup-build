@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ProfileDisplayCache, ResourcesCache } from './simple-cache'
 import { PerfMon } from './performance-monitor'
 import { LocalProfileService, LocalProfile } from './local-profile'
@@ -76,8 +76,50 @@ export interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
+function getPublicProfileFromPath(pathname: string): Profile | null {
+	// Pattern: /[regulation]/[branch]/[year][sem]
+	// Example: /r23/cse/31 or /r23/aiml/22
+	// We use a basic split approach first
+	const parts = pathname.split('/').filter(Boolean)
+	// parts[0] is strictly regulation (starts with r)
+	// parts[1] is branch
+	// parts[2] is yearSem (2 digits)
+
+	if (parts.length < 3) return null
+
+	// Check if first part looks like a regulation (e.g. r23, r20)
+	const regulation = parts[0]
+	if (!regulation.startsWith('r') && !regulation.startsWith('R')) return null;
+
+	const branchCode = parts[1]
+	const yearSem = parts[2]
+
+	// Validate yearSem is exactly 2 digits
+	if (!/^\d{2}$/.test(yearSem)) return null
+
+	const year = parseInt(yearSem[0], 10)
+	const semester = parseInt(yearSem[1], 10)
+
+	// Validate ranges
+	if (year < 1 || year > 4) return null
+	if (semester < 1 || semester > 2) return null
+
+	return {
+		id: 'public-user',
+		email: 'guest@pecup.in',
+		name: 'Guest User',
+		branch: branchCode.toUpperCase(),
+		year: year,
+		semester: semester,
+		role: 'student',
+		// We don't have IDs, but APIs handle codes generally
+	}
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
 	const router = useRouter()
+	const pathname = usePathname()
+	const searchParams = useSearchParams()
 	const [profile, setProfile] = useState<Profile | null>(null)
 	const [subjects, setSubjects] = useState<Subject[]>([])
 	const [staticData, setStaticData] = useState<EnhancedProfileStaticData | null>(null)
@@ -90,8 +132,45 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 	// Load from local storage on mount
 	useEffect(() => {
 		const localProfile = LocalProfileService.get()
+
 		if (!localProfile) {
-			router.replace('/onboarding')
+			// Check if we are on a public route
+			const publicProfile = getPublicProfileFromPath(pathname)
+			if (publicProfile) {
+				setProfile(publicProfile)
+				setLoading(false)
+				fetchBulkData(false, publicProfile)
+				return
+			}
+
+			// Check query params
+			const branchParam = searchParams.get('branch')
+			const yearParam = searchParams.get('year')
+			// semester is optional usually, but good to have
+			const semesterParam = searchParams.get('semester')
+
+			if (branchParam && yearParam) {
+				const paramProfile: Profile = {
+					id: 'query-user',
+					email: 'guest@pecup.in',
+					name: 'Guest User',
+					branch: branchParam,
+					year: parseInt(yearParam, 10),
+					semester: semesterParam ? parseInt(semesterParam, 10) : undefined,
+					role: 'student'
+				}
+				setProfile(paramProfile)
+				setLoading(false)
+				fetchBulkData(false, paramProfile)
+				return
+			}
+
+			// Don't redirect if we are already on onboarding or public un-profiled pages (like login?)
+			// But traditionally we redirect to onboarding if no profile.
+			// Let's keep it safe: if not public profile path and not onboarding, redirect.
+			if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/login') && pathname !== '/') {
+				router.replace('/onboarding')
+			}
 			setLoading(false)
 			return
 		}
