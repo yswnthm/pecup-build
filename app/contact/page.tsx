@@ -1,6 +1,6 @@
-import WhatsAppJoinPopup from '@/components/WhatsAppJoinPopup'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ChatBubble from '@/components/ChatBubble'
+
 import { Breadcrumb } from '@/components/Breadcrumb'
 import { Mail, Phone, Sparkle, Clock, MessageCircle, IceCreamCone, SquareUserRound } from "lucide-react";
 
@@ -138,7 +138,7 @@ export default function ContactPage() {
         </Card>
       </div>
       {/* Removed duplicate WhatsAppJoinPopup instance - using global one from layout.tsx */}
-      <ChatBubble href="https://chat.pecup.in" />
+
     </div>
   );
 }

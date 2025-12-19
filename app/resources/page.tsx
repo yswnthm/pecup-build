@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Link from "next/link"
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
-import ChatBubble from '@/components/ChatBubble'
+
 import { FileText, BookOpen, FileCheck, Database, Users, Loader2 } from "lucide-react"
 import { Badge } from '@/components/ui/badge'
 import Loader from '@/components/Loader'
@@ -184,7 +184,7 @@ export default function ResourcesPage() {
           </ul>
         </CardContent>
       </Card>
-      <ChatBubble href="https://chat.pecup.in" />
+
     </div>
   )
 }

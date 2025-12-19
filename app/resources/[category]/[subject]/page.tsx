@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Header } from '@/components/Header'
-import ChatBubble from '@/components/ChatBubble'
+
 import { Breadcrumb } from '@/components/Breadcrumb'
 import { ChevronRight, FileText, ChevronDown, Download, ExternalLink, Loader2, AlertCircle, Search, ArrowUpDown, Filter, RefreshCw, Users } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -724,7 +724,7 @@ export default function SubjectPage({
         </CardContent>
       </Card>
 
-      <ChatBubble href="https://chat.pecup.in" />
+
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Link from "next/link"
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
-import ChatBubble from '@/components/ChatBubble'
+
 import { FileText, BookOpen, FileCheck, Database, ChevronRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState } from 'react'
@@ -114,7 +114,7 @@ export default function ArchivePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Years</SelectItem>
-                    {[1,2,3,4].map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
+                    {[1, 2, 3, 4].map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -125,7 +125,7 @@ export default function ArchivePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Semesters</SelectItem>
-                    {[1,2].map((s) => <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>)}
+                    {[1, 2].map((s) => <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -142,7 +142,7 @@ export default function ArchivePage() {
             </div>
           </CardContent>
         </Card>
-        <ChatBubble href="https://chat.pecup.in" />
+
       </div>
     </div>
   )

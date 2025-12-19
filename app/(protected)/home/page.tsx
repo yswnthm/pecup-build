@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
-import ChatBubble from '@/components/ChatBubble'
+
 import Hero from '@/components/Hero'
 import Loader from '@/components/Loader'
 
@@ -381,7 +381,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <ChatBubble href="https://chat.pecup.in" />
+
     </motion.div>
   )
 }

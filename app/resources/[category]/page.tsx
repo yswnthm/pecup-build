@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Header } from '@/components/Header'
-import ChatBubble from '@/components/ChatBubble'
+
 import { ChevronRight, Users, Loader2 } from "lucide-react"
 import { Badge } from '@/components/ui/badge'
 import { useEffect, useState, use } from 'react'
@@ -107,7 +107,7 @@ export default function CategoryPage({ params, searchParams }: {
         </div>
 
         <ResourcesFiltersClient category={category} categoryData={categoryData} />
-        <ChatBubble href="https://chat.pecup.in" />
+
       </div>
     </div>
   )

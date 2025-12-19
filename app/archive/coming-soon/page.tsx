@@ -1,7 +1,7 @@
 // app/archive/coming-soon/page.tsx
 
 import React from 'react';
-import ChatBubble from '@/components/ChatBubble'
+
 
 export default function ComingSoonPage() {
   return (
@@ -14,7 +14,7 @@ export default function ComingSoonPage() {
       <p className="text-sm text-gray-500">
         We appreciate your patience.
       </p>
-      <ChatBubble href="https://chat.pecup.in" />
+
     </div>
   );
 }
