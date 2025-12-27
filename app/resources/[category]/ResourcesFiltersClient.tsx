@@ -19,9 +19,14 @@ interface ResourcesFiltersClientProps {
     title: string
     description: string
   }
+  context?: {
+    regulation: string
+    branch: string
+    yearSem: string
+  }
 }
 
-export default function ResourcesFiltersClient({ category, categoryData }: ResourcesFiltersClientProps) {
+export default function ResourcesFiltersClient({ category, categoryData, context }: ResourcesFiltersClientProps) {
   const searchParams = useSearchParams()
   const { subjects, loading } = useProfile()
 
@@ -36,17 +41,26 @@ export default function ResourcesFiltersClient({ category, categoryData }: Resou
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {!loading && filteredSubjects.map((s: ResourceSubject) => {
-        const qp = new URLSearchParams()
-        const year = searchParams.get('year')
-        const semester = searchParams.get('semester')
-        const branch = searchParams.get('branch')
-        if (year) qp.set('year', year)
-        if (semester) qp.set('semester', semester)
-        if (branch) qp.set('branch', branch)
-        const q = qp.toString()
+        let href: string;
+        
+        if (context) {
+          // Use hierarchical URL if context is provided
+          href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code)}`
+        } else {
+          // Fallback to legacy query params
+          const qp = new URLSearchParams()
+          const year = searchParams.get('year')
+          const semester = searchParams.get('semester')
+          const branch = searchParams.get('branch')
+          if (year) qp.set('year', year)
+          if (semester) qp.set('semester', semester)
+          if (branch) qp.set('branch', branch)
+          const q = qp.toString()
+          href = `/resources/${category}/${encodeURIComponent(s.code)}${q ? `?${q}` : ''}`
+        }
 
         return (
-          <Link key={s.code} href={`/resources/${category}/${encodeURIComponent(s.code)}${q ? `?${q}` : ''}`} className="block">
+          <Link key={s.code} href={href} className="block">
             <Card className="h-full transition-all-smooth hover-lift">
               <CardHeader>
                 <CardTitle>{getSubjectDisplay(s, true)}</CardTitle>
