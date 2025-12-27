@@ -52,116 +52,47 @@ export function DashboardClient() {
 
 
 
-    // Construct query params for resource links
-    const query = useMemo(() => {
+    // Construct query params for resource links or context-based paths
+    const getCategoryPath = (basePath: string) => {
+        // Check if we have a full context to use the clean URL format
+        // We need branch, year, semester, and a regulation (defaulting to r23 if not in URL, but safer to rely on context if available)
+        // Actually, Profile doesn't store regulation explicitly usually, but let's check if we are in a context-aware route.
+        // For now, let's assume if we have all parts we can construct it.
+        // HOWEVER, the profile object doesn't have regulation. 
+        // We can check the current pathname to see if it starts with /r...
+        // Or we can try to guess.
+        
+        // Better approach: If we are on a page that provided the context (public profile), use that.
+        // The URL pattern is usually /[regulation]/[branch]/[yearSem]
+        
+        // Let's rely on the profile. If it's a "public-user" (guest) from URL, we can reconstruct the path?
+        // Actually, let's just use the current window location if available, or pass it as prop?
+        // DashboardClient is used in app/[regulation]/[branch]/[yearSem]/page.tsx.
+        
+        if (profile?.branch && profile?.year && profile?.semester) {
+             // Basic regex to check if current path is a context path
+             const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+             const regulation = match ? match[1] : 'r23'; // Default to r23 if not found, or maybe fallback to query params?
+             
+             // Check if we are actually in a context route or just have a logged in user
+             // If logged in user at root /, we might want to stick to /resources/notes?params... or redirect to context?
+             // The requirement is specifically for the /r23/cse/11 URL to work.
+             
+             if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
+                 // We are likely in a context route
+                 const cleanCategory = basePath.replace('/resources/', '');
+                 const yearSem = `${profile.year}${profile.semester}`;
+                 return `/${regulation}/${profile.branch.toLowerCase()}/${yearSem}/${cleanCategory}`;
+             }
+        }
+
+        // Fallback to legacy query params
         const p = new URLSearchParams()
         if (year !== 'all') p.set('year', String(year))
         if (semester !== 'all') p.set('semester', String(semester))
         if (branch) p.set('branch', branch)
         const s = p.toString()
-        return s ? `?${s}` : ''
-    }, [year, semester, branch])
-
-    // Sync state with profile
-    useEffect(() => {
-        if (profile) {
-            if (year === 'all') setYear(profile.year ?? ('all' as any))
-            if (semester === 'all') setSemester(1)
-            if (!branch && profile.branch) setBranch(profile.branch)
-        }
-    }, [profile, year, semester, branch])
-
-    // User Count Logic
-    useEffect(() => {
-        if (dynamicData?.usersCount) {
-            setUsersCount(dynamicData.usersCount)
-        }
-    }, [dynamicData?.usersCount])
-
-
-
-    // Data Fetching Logic (Updates)
-    useEffect(() => {
-        let isMounted = true
-
-        if (!loading && profile) {
-            const fetchUpdates = async () => {
-                setIsLoadingUpdates(true)
-                setUpdatesError(null)
-                try {
-                    const queryParams = new URLSearchParams({
-                        branch: profile.branch || '',
-                        year: profile.year?.toString() || ''
-                    }).toString()
-                    const response = await fetch(`/api/recent-updates?${queryParams}`)
-
-                    if (!response.ok) throw new Error(`Updates fetch failed: ${response.status}`)
-                    const data = await response.json()
-                    if (!Array.isArray(data)) throw new Error('Invalid updates data format.')
-                    if (isMounted) setUpdates(data)
-                } catch (error: any) {
-                    console.error('Error fetching recent updates:', error)
-                    if (isMounted) setUpdatesError(error.message || 'Error.')
-                } finally {
-                    if (isMounted) setIsLoadingUpdates(false)
-                }
-            }
-
-            fetchUpdates()
-        } else if (!loading && !profile) {
-            if (isMounted) setIsLoadingUpdates(false)
-        }
-
-        return () => {
-            isMounted = false
-        }
-    }, [loading, profile])
-
-    // Initial Load Check
-    const [isInitialLoad, setIsInitialLoad] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return !sessionStorage.getItem('dashboard_loaded')
-        }
-        return true
-    })
-
-    useEffect(() => {
-        if (!loading) {
-            sessionStorage.setItem('dashboard_loaded', 'true')
-            setIsInitialLoad(false)
-        }
-    }, [loading])
-
-    // Loading View
-    if (loading) {
-        if (isInitialLoad) {
-            return (
-                <div className="fixed inset-0 z-[100] flex justify-center items-center bg-background">
-                    <Loader />
-                </div>
-            )
-        }
-        return (
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <Loader />
-            </div>
-        )
-    }
-
-    // Helpers
-    const getRoleDisplay = (role: string) => {
-        switch (role) {
-            case 'student':
-                return <Badge variant="secondary">Student</Badge>
-            case 'representative':
-                return <Badge variant="default">Representative</Badge>
-            case 'admin':
-                return <Badge variant="destructive">Admin</Badge>
-            case 'yeshh':
-                return <Badge variant="destructive">Yeshh</Badge>
-            default:
-                return <Badge variant="outline">{role}</Badge>
-        }
+        return `${basePath}${s ? `?${s}` : ''}`
     }
 
     const categories = [
@@ -247,7 +178,7 @@ export function DashboardClient() {
             {/* Main Grid - Resource Categories */}
             <div id="resources" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {categories.map((category) => (
-                    <Link key={category.name} href={`${category.path}${query}`} className="block">
+                    <Link key={category.name} href={getCategoryPath(category.path)} className="block">
                         <Card className="h-full transition-all-smooth hover-lift">
                             <CardHeader className={`rounded-t-lg ${category.color}`}>
                                 <div className="flex items-center gap-3">
