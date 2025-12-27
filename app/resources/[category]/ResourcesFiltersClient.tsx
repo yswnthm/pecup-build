@@ -45,7 +45,7 @@ export default function ResourcesFiltersClient({ category, categoryData, context
         
         if (context) {
           // Use hierarchical URL if context is provided
-          href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code)}`
+          href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`
         } else {
           // Fallback to legacy query params
           const qp = new URLSearchParams()
@@ -56,7 +56,7 @@ export default function ResourcesFiltersClient({ category, categoryData, context
           if (semester) qp.set('semester', semester)
           if (branch) qp.set('branch', branch)
           const q = qp.toString()
-          href = `/resources/${category}/${encodeURIComponent(s.code)}${q ? `?${q}` : ''}`
+          href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
         }
 
         return (
