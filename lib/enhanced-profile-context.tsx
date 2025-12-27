@@ -147,7 +147,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 			const publicProfile = getPublicProfileFromPath(pathname)
 			if (publicProfile) {
 				setProfile(publicProfile)
-				setLoading(false)
 				fetchContextData(publicProfile)
 				return
 			}
@@ -169,7 +168,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 					role: 'student'
 				}
 				setProfile(paramProfile)
-				setLoading(false)
 				fetchContextData(paramProfile)
 				return
 			}
@@ -201,7 +199,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		}
 
 		setProfile(convertedProfile)
-		setLoading(false)
 
 		// Fetch fresh data in background
 		fetchContextData(convertedProfile)
@@ -210,16 +207,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const fetchContextData = async (currentP: Profile) => {
-		if (!currentP.branch || !currentP.year || !currentP.semester) return
+		if (!currentP.branch || !currentP.year || !currentP.semester) {
+			setLoading(false)
+			return
+		}
 
+		setLoading(true)
 		// Parallel fetch for granular data
-		Promise.all([
-			fetchSubjects(currentP),
-			fetchDynamicInfo(currentP)
-		]).catch(err => {
+		try {
+			await Promise.all([
+				fetchSubjects(currentP),
+				fetchDynamicInfo(currentP)
+			])
+		} catch (err) {
 			console.error('Error fetching context data', err)
 			setError('Failed to load some data')
-		})
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	const fetchSubjects = async (p: Profile) => {
@@ -241,22 +246,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 	const fetchDynamicInfo = async (p: Profile) => {
 		try {
-			// Fetch users count (global)
-			fetch('/api/users-count').then(r => r.json()).then(d => {
+			// Fetch users count (global) and recent updates in parallel
+			const [usersRes, updatesRes] = await Promise.all([
+				fetch('/api/users-count'),
+				fetch(`/api/recent-updates?${new URLSearchParams({
+					branch: p.branch!,
+					year: String(p.year)
+				}).toString()}`)
+			])
+
+			if (usersRes.ok) {
+				const d = await usersRes.json()
 				setDynamicData(prev => ({ ...prev, usersCount: d.totalUsers }))
-			}).catch(() => {})
+			}
 
-			// Fetch recent updates
-			const query = new URLSearchParams({
-				branch: p.branch!,
-				year: String(p.year)
-			})
-			fetch(`/api/recent-updates?${query.toString()}`).then(r => r.json()).then(d => {
-				// Assuming d is array of updates
+			if (updatesRes.ok) {
+				const d = await updatesRes.json()
 				setDynamicData(prev => ({ ...prev, recentUpdates: Array.isArray(d) ? d : [] }))
-			}).catch(() => {})
-
-			// We could also fetch exams here if there was a separate API
+			}
 		} catch (e) {
 			console.error('Failed to fetch dynamic info', e)
 		}
