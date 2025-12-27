@@ -76,7 +76,7 @@ export interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
-function getPublicProfileFromPath(pathname: string): Profile | null {
+export function getPublicProfileFromPath(pathname: string): Profile | null {
 	// Pattern: /[regulation]/[branch]/[year][sem]
 	// Example: /r23/cse/31 or /r23/aiml/22
 	// We use a basic split approach first
@@ -94,11 +94,20 @@ function getPublicProfileFromPath(pathname: string): Profile | null {
 	const branchCode = parts[1]
 	const yearSem = parts[2]
 
-	// Validate yearSem is exactly 2 digits
-	if (!/^\d{2}$/.test(yearSem)) return null
+	// Validate yearSem is either "31" or "3-1" format
+	let year: number
+	let semester: number
 
-	const year = parseInt(yearSem[0], 10)
-	const semester = parseInt(yearSem[1], 10)
+	if (/^\d{2}$/.test(yearSem)) {
+		year = parseInt(yearSem[0], 10)
+		semester = parseInt(yearSem[1], 10)
+	} else if (/^\d-\d$/.test(yearSem)) {
+		const [y, s] = yearSem.split('-')
+		year = parseInt(y, 10)
+		semester = parseInt(s, 10)
+	} else {
+		return null
+	}
 
 	// Validate ranges
 	if (year < 1 || year > 4) return null
