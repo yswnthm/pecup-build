@@ -148,7 +148,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 			if (publicProfile) {
 				setProfile(publicProfile)
 				setLoading(false)
-				fetchBulkData(false, publicProfile)
+				fetchContextData(publicProfile)
 				return
 			}
 
@@ -170,7 +170,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 				}
 				setProfile(paramProfile)
 				setLoading(false)
-				fetchBulkData(false, paramProfile)
+				fetchContextData(paramProfile)
 				return
 			}
 
@@ -201,27 +201,66 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		}
 
 		setProfile(convertedProfile)
-
-		// Load other cached data
-		const cachedStatic = StaticCache.get(isEnhancedProfileStaticData)
-		const cachedDynamic = DynamicCache.get(isEnhancedProfileDynamicData)
-
-		if (cachedStatic) setStaticData(cachedStatic)
-		if (cachedDynamic) setDynamicData(cachedDynamic)
-
-		// Try to load subjects from cache
-		if (localProfile.branch && localProfile.year && localProfile.semester) {
-			const cachedSubjects = SubjectsCache.get(localProfile.branch, localProfile.year, localProfile.semester)
-			if (cachedSubjects) setSubjects(cachedSubjects)
-		}
-
 		setLoading(false)
 
 		// Fetch fresh data in background
-		fetchBulkData(false, convertedProfile)
+		fetchContextData(convertedProfile)
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
+
+	const fetchContextData = async (currentP: Profile) => {
+		if (!currentP.branch || !currentP.year || !currentP.semester) return
+
+		// Parallel fetch for granular data
+		Promise.all([
+			fetchSubjects(currentP),
+			fetchDynamicInfo(currentP)
+		]).catch(err => {
+			console.error('Error fetching context data', err)
+			setError('Failed to load some data')
+		})
+	}
+
+	const fetchSubjects = async (p: Profile) => {
+		try {
+			const query = new URLSearchParams({
+				branch: p.branch!,
+				year: String(p.year),
+				semester: String(p.semester)
+			})
+			const res = await fetch(`/api/subjects?${query.toString()}`)
+			if (res.ok) {
+				const data = await res.json()
+				setSubjects(data.subjects || [])
+			}
+		} catch (e) {
+			console.error('Failed to fetch subjects', e)
+		}
+	}
+
+	const fetchDynamicInfo = async (p: Profile) => {
+		try {
+			// Fetch users count (global)
+			fetch('/api/users-count').then(r => r.json()).then(d => {
+				setDynamicData(prev => ({ ...prev, usersCount: d.totalUsers }))
+			}).catch(() => {})
+
+			// Fetch recent updates
+			const query = new URLSearchParams({
+				branch: p.branch!,
+				year: String(p.year)
+			})
+			fetch(`/api/recent-updates?${query.toString()}`).then(r => r.json()).then(d => {
+				// Assuming d is array of updates
+				setDynamicData(prev => ({ ...prev, recentUpdates: Array.isArray(d) ? d : [] }))
+			}).catch(() => {})
+
+			// We could also fetch exams here if there was a separate API
+		} catch (e) {
+			console.error('Failed to fetch dynamic info', e)
+		}
+	}
 
 	// Simple fetch with optional retry/backoff for transient failures
 	const fetchWithRetry = async (url: string, init: RequestInit, retries: number, backoffMs: number) => {
@@ -246,89 +285,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 		}
 	}
 
-	const fetchBulkData = async (showLoading = true, currentProfileOverride?: Profile) => {
-		const currentP = currentProfileOverride || profile
-		if (!currentP) return
-
-		if (showLoading) setLoading(true)
-		setError(null)
-
-		try {
-			const params = new URLSearchParams()
-			if (currentP.branch) params.set('branch', currentP.branch)
-			if (currentP.year) params.set('year', String(currentP.year))
-			if (currentP.semester) params.set('semester', String(currentP.semester))
-			if (currentP.branch_id) params.set('branch_id', currentP.branch_id)
-			if (currentP.year_id) params.set('year_id', currentP.year_id)
-			if (currentP.semester_id) params.set('semester_id', currentP.semester_id)
-
-			const response = await fetchWithRetry(
-				`/api/bulk-academic-data?${params.toString()}`,
-				{ cache: 'no-store' },
-				// Retry only when user is waiting (showLoading)
-				showLoading ? 2 : 0,
-				500
-			)
-			if (!response.ok) throw new Error('Failed to fetch data')
-
-			const data = await response.json()
-
-			// Update state - keep existing profile (local), update everything else
-			// IF the API returned a profile (it shouldn't now, but just in case), we ignore it or merge?
-			// We ignore it because local storage is source of truth for profile identity.
-
-			setSubjects(Array.isArray(data.subjects) ? data.subjects : [])
-			setStaticData((data.static as EnhancedProfileStaticData) ?? null)
-			setDynamicData((data.dynamic as EnhancedProfileDynamicData) ?? null)
-			setResources(data.resources || null)
-			setWarnings(Array.isArray(data.contextWarnings) ? data.contextWarnings : null)
-
-			// Update caches
-			StaticCache.set(data.static)
-			DynamicCache.set(data.dynamic)
-
-			if (
-				currentP.branch &&
-				currentP.year &&
-				currentP.semester
-			) {
-				SubjectsCache.set(
-					currentP.branch,
-					currentP.year,
-					currentP.semester,
-					Array.isArray(data.subjects) ? data.subjects : []
-				)
-			}
-
-			// Cache resources
-			if (data.resources) {
-				Object.keys(data.resources).forEach(subject => {
-					Object.keys(data.resources[subject]).forEach(category => {
-						ResourcesCache.set(category, subject, data.resources[subject][category])
-					})
-				})
-			}
-
-
-		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : String(err)
-			setError(message || 'Failed to load data')
-			if (process.env.NODE_ENV !== 'production') {
-				// eslint-disable-next-line no-console
-				console.error('Bulk fetch error:', err)
-			}
-		} finally {
-			setLoading(false)
-		}
-	}
-
 	// Simple invalidation on user actions
 	const refreshProfile = async () => {
-		// Technically profile is local, so "refreshing" it just means re-reading local storage?
-		// Or re-fetching dependent data.
 		const localProfile = LocalProfileService.get()
 		if (localProfile) {
-			// Update in-memory profile incase local storage changed
 			const convertedProfile: Profile = {
 				id: localProfile.roll_number,
 				name: localProfile.name,
@@ -344,27 +304,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 				semester_id: localProfile.semester_id,
 			}
 			setProfile(convertedProfile)
-			await fetchBulkData(true, convertedProfile)
+			await fetchContextData(convertedProfile)
 		}
 	}
 
 	const refreshSubjects = async () => {
-		if (!profile || !profile.branch || !profile.year || !profile.semester) return
-		SubjectsCache.clearForContext(profile.branch, profile.year, profile.semester)
-		await fetchBulkData(true)
+		if (profile) await fetchSubjects(profile)
 	}
 
 	const forceRefresh = async () => {
-		if (process.env.NODE_ENV !== 'production') {
-			console.log('[DEBUG] Force refresh triggered')
-		}
-		StaticCache.clear()
-		DynamicCache.clear()
-		ResourcesCache.clearAll()
-		if (profile && profile.branch && profile.year && profile.semester) {
-			SubjectsCache.clearForContext(profile.branch, profile.year, profile.semester)
-		}
-		await fetchBulkData(true)
+		if (profile) await fetchContextData(profile)
 	}
 
 
