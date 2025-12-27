@@ -95,6 +95,22 @@ export function DashboardClient() {
         return `${basePath}${s ? `?${s}` : ''}`
     }
 
+    // Helpers
+    const getRoleDisplay = (role: string) => {
+        switch (role) {
+            case 'student':
+                return <Badge variant="secondary">Student</Badge>
+            case 'representative':
+                return <Badge variant="default">Representative</Badge>
+            case 'admin':
+                return <Badge variant="destructive">Admin</Badge>
+            case 'yeshh':
+                return <Badge variant="destructive">Yeshh</Badge>
+            default:
+                return <Badge variant="outline">{role}</Badge>
+        }
+    }
+
     const categories = [
         {
             name: "Notes",
