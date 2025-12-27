@@ -130,45 +130,56 @@ describe('bulk-academic-data GET', () => {
     vi.useRealTimers()
   })
 
-  it('returns 200 and expected keys when authenticated', async () => {
-    ;({ getServerSession } = await import('next-auth'))
+  it('returns 200 and expected keys', async () => {
     ;({ createSupabaseAdmin } = await import('@/lib/supabase'))
-    getServerSession.mockResolvedValue({ user: { email: 'test@example.com' } })
     createSupabaseAdmin.mockReturnValue(makeSupabaseMock())
 
     const { GET } = await import('@/app/api/bulk-academic-data/route')
-    const res = await GET()
+    const req = {
+      nextUrl: {
+        searchParams: new URLSearchParams({
+          branch: 'CSE',
+          year: '3',
+          semester: '1'
+        })
+      }
+    } as any
+    const res = await GET(req)
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body).toHaveProperty('profile')
+    expect(body.profile).toBeNull()
     expect(body).toHaveProperty('subjects')
     expect(body).toHaveProperty('static')
     expect(body).toHaveProperty('dynamic')
-    expect(body.profile.email).toBe('test@example.com')
   })
 
-  it('returns 401 when unauthenticated', async () => {
-    ;({ getServerSession } = await import('next-auth'))
-    getServerSession.mockResolvedValue(null)
-
+  it('returns 200 even without session (stateless)', async () => {
     const { GET } = await import('@/app/api/bulk-academic-data/route')
-    const res = await GET()
-    expect(res.status).toBe(401)
+    const req = {
+      nextUrl: {
+        searchParams: new URLSearchParams()
+      }
+    } as any
+    const res = await GET(req)
+    expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.ok).toBe(false)
-    expect(body.error?.code).toBe('UNAUTHORIZED')
+    expect(body.profile).toBeNull()
   })
 
   it('returns 500 when Supabase creation throws', async () => {
-    ;({ getServerSession } = await import('next-auth'))
     ;({ createSupabaseAdmin } = await import('@/lib/supabase'))
-    getServerSession.mockResolvedValue({ user: { email: 'test@example.com' } })
     createSupabaseAdmin.mockImplementation(() => {
       throw new Error('boom')
     })
 
     const { GET } = await import('@/app/api/bulk-academic-data/route')
-    const res = await GET()
+    const req = {
+      nextUrl: {
+        searchParams: new URLSearchParams()
+      }
+    } as any
+    const res = await GET(req)
     expect(res.status).toBe(500)
     const body = await res.json()
     expect(body.ok).toBe(false)

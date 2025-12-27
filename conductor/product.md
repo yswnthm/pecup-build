@@ -14,6 +14,6 @@ To provide university students with a frictionless, high-speed platform for acce
 *   **Zero Friction:** Bypassing unnecessary detail pages or complex login walls for public resources.
 
 ## Key Features
-*   **Categorized Resource Browsing:** A structured hierarchy organizing content by Regulation, Branch, Year, and Semester (e.g., `/R18/CSE/3-1`).
+*   **Categorized Resource Browsing:** A structured hierarchy organizing content by Regulation, Branch, Year, and Semester, with deep-linking support for categories and subjects (e.g., `/r23/cse/31/notes/res`).
 *   **Direct Resource Links:** "One-click" access to external files (PDFs, Drive links) to streamline the study process.
 *   **Subject-Centric View:** Aggregated views of all materials available for a specific subject within a semester.
