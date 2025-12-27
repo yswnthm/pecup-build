@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { useEffect, useState, use } from 'react'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { notFound } from 'next/navigation'
+import { Breadcrumb } from '@/components/Breadcrumb'
+import { generateBreadcrumbs } from '@/lib/navigation-utils'
 import ResourcesFiltersClient from '@/app/resources/[category]/ResourcesFiltersClient'
 
 const resourceData = {
@@ -65,6 +67,8 @@ export default function ContextCategoryPage({ params }: {
   }
   const categoryData = resourceData[category as keyof typeof resourceData]
 
+  const breadcrumbs = generateBreadcrumbs(regulation, branch, yearSem, category)
+
   return (
     <div className="space-y-4 p-4 md:p-6 lg:p-8">
       <Header />
@@ -72,11 +76,7 @@ export default function ContextCategoryPage({ params }: {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
-              <Link href={`/${regulation}/${branch}/${yearSem}`} className="hover:text-foreground">Home</Link>
-              <ChevronRight className="h-4 w-4" />
-              <span aria-current="page">{categoryData.title}</span>
-            </nav>
+            <Breadcrumb items={breadcrumbs} />
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}

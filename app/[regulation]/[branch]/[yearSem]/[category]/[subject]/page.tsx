@@ -17,7 +17,7 @@ import { getResourceTypeForCategory } from '@/lib/resource-utils'
 import { useProfile, type Subject } from '@/lib/enhanced-profile-context'
 import { getSubjectDisplayByCode } from '@/lib/subject-display'
 import { ResourcesCache } from '@/lib/simple-cache'
-import { Resource } from '@/lib/types'
+import { generateBreadcrumbs } from '@/lib/navigation-utils'
 
 // DTO type that matches the API response format
 interface ResourceDTO {
@@ -329,6 +329,8 @@ export default function ContextSubjectPage({
 
   const resultCount = visibleResources.length
 
+  const breadcrumbs = generateBreadcrumbs(regulation, branch, yearSem, category, resolvedSubjectCode, subjectName)
+
   return (
     <div className="space-y-4 p-4 md:p-6 lg:p-8">
       <Header />
@@ -336,11 +338,7 @@ export default function ContextSubjectPage({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <Breadcrumb items={[
-              { label: "Home", href: `/${regulation}/${branch}/${yearSem}` },
-              { label: categoryTitle, href: `/${regulation}/${branch}/${yearSem}/${category}` },
-              { label: subjectName, isCurrentPage: true }
-            ]} />
+            <Breadcrumb items={breadcrumbs} />
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}

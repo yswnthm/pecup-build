@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/Breadcrumb'
+import { generateBreadcrumbs } from '@/lib/navigation-utils'
 
 import Hero from '@/components/Hero'
 import Loader from '@/components/Loader'
@@ -146,6 +147,15 @@ export function DashboardClient() {
         },
     ]
 
+    const breadcrumbs = useMemo(() => {
+        if (profile?.branch && profile?.year && profile?.semester) {
+             const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+             const regulation = match ? match[1] : 'r23';
+             return generateBreadcrumbs(regulation, profile.branch.toLowerCase(), `${profile.year}${profile.semester}`);
+        }
+        return [{ label: "♡", isCurrentPage: true }];
+    }, [profile]);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -159,9 +169,7 @@ export function DashboardClient() {
                 {/* Top Bar */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Breadcrumb items={[
-                            { label: "♡", isCurrentPage: true }
-                        ]} />
+                        <Breadcrumb items={breadcrumbs} />
                     </div>
                     <div className="flex items-center gap-4">
                         {profile?.role && getRoleDisplay(profile.role)}
