@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ProfileDisplayCache, ResourcesCache } from './simple-cache'
 import { PerfMon } from './performance-monitor'
-import { LocalProfileService, LocalProfile } from './local-profile'
 
 
 // Narrow shapes for bulk static and dynamic data with safe extensibility
@@ -138,70 +137,42 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 	const [error, setError] = useState<string | null>(null)
 	const [warnings, setWarnings] = useState<string[] | null>(null)
 
-	// Load from local storage on mount
+	// Load from URL/Path on mount (No Local Storage)
 	useEffect(() => {
-		const localProfile = LocalProfileService.get()
-
-		if (!localProfile) {
-			// Check if we are on a public route
-			const publicProfile = getPublicProfileFromPath(pathname)
-			if (publicProfile) {
-				setProfile(publicProfile)
-				fetchContextData(publicProfile)
-				return
-			}
-
-			// Check query params
-			const branchParam = searchParams.get('branch')
-			const yearParam = searchParams.get('year')
-			// semester is optional usually, but good to have
-			const semesterParam = searchParams.get('semester')
-
-			if (branchParam && yearParam) {
-				const paramProfile: Profile = {
-					id: 'query-user',
-					email: 'guest@pecup.in',
-					name: 'Guest User',
-					branch: branchParam,
-					year: parseInt(yearParam, 10),
-					semester: semesterParam ? parseInt(semesterParam, 10) : undefined,
-					role: 'student'
-				}
-				setProfile(paramProfile)
-				fetchContextData(paramProfile)
-				return
-			}
-
-			// Don't redirect if we are already on onboarding or public un-profiled pages (like login?)
-			// But traditionally we redirect to onboarding if no profile.
-			// Let's keep it safe: if not public profile path and not onboarding, redirect.
-			if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/login') && pathname !== '/') {
-				router.replace('/onboarding')
-			}
-			setLoading(false)
+		// Check if we are on a public route
+		const publicProfile = getPublicProfileFromPath(pathname)
+		if (publicProfile) {
+			setProfile(publicProfile)
+			fetchContextData(publicProfile)
 			return
 		}
 
-		// Convert LocalProfile to Profile
-		const convertedProfile: Profile = {
-			id: localProfile.roll_number, // Use roll number as ID
-			name: localProfile.name,
-			email: localProfile.email || 'local-user',
-			roll_number: localProfile.roll_number,
-			branch: localProfile.branch,
-			year: localProfile.year,
-			semester: localProfile.semester,
-			section: localProfile.section,
-			role: 'student',
-			branch_id: localProfile.branch_id,
-			year_id: localProfile.year_id,
-			semester_id: localProfile.semester_id,
+		// Check query params
+		const branchParam = searchParams.get('branch')
+		const yearParam = searchParams.get('year')
+		// semester is optional usually, but good to have
+		const semesterParam = searchParams.get('semester')
+
+		if (branchParam && yearParam) {
+			const paramProfile: Profile = {
+				id: 'query-user',
+				email: 'guest@pecup.in',
+				name: 'Guest User',
+				branch: branchParam,
+				year: parseInt(yearParam, 10),
+				semester: semesterParam ? parseInt(semesterParam, 10) : undefined,
+				role: 'student'
+			}
+			setProfile(paramProfile)
+			fetchContextData(paramProfile)
+			return
 		}
 
-		setProfile(convertedProfile)
-
-		// Fetch fresh data in background
-		fetchContextData(convertedProfile)
+		// Don't redirect if we are already on onboarding or public un-profiled pages (like login?)
+		if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/login') && pathname !== '/') {
+			router.replace('/onboarding')
+		}
+		setLoading(false)
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
@@ -294,24 +265,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 	// Simple invalidation on user actions
 	const refreshProfile = async () => {
-		const localProfile = LocalProfileService.get()
-		if (localProfile) {
-			const convertedProfile: Profile = {
-				id: localProfile.roll_number,
-				name: localProfile.name,
-				email: localProfile.email || 'local-user',
-				roll_number: localProfile.roll_number,
-				branch: localProfile.branch,
-				year: localProfile.year,
-				semester: localProfile.semester,
-				section: localProfile.section,
-				role: 'student',
-				branch_id: localProfile.branch_id,
-				year_id: localProfile.year_id,
-				semester_id: localProfile.semester_id,
-			}
-			setProfile(convertedProfile)
-			await fetchContextData(convertedProfile)
+		if (profile) {
+			await fetchContextData(profile)
 		}
 	}
 
@@ -331,7 +286,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 			if (document.visibilityState === 'visible' && profile) {
 				const cachedDynamic = DynamicCache.get(isEnhancedProfileDynamicData)
 				if (!cachedDynamic) {
-					fetchBulkData(false).catch((err) => {
+					fetchContextData(profile).catch((err) => {
 						if (process.env.NODE_ENV !== 'production') {
 							// eslint-disable-next-line no-console
 							console.error('visibilitychange refresh failed:', err)

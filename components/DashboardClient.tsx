@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from "next/link"
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { FileText, BookOpen, FileCheck, Database, Users, Loader2, CalendarDays, Clock, AlertCircle } from "lucide-react"
 
@@ -31,7 +32,7 @@ const SHOW_ACTUAL_USER_COUNT = true;
 
 export function DashboardClient() {
     const { profile } = useProfile()
-    
+
     // Fetch dynamic data using React Query
     const { data: dynamicData, isLoading: dynamicLoading, error: dynamicError } = useDynamicData({
         branch: profile?.branch,
@@ -42,14 +43,14 @@ export function DashboardClient() {
     // Construct query params for resource links or context-based paths
     const getCategoryPath = (basePath: string) => {
         if (profile?.branch && profile?.year && profile?.semester) {
-             const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
-             const regulation = match ? match[1] : 'r23'; 
-             
-             if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
-                 const cleanCategory = basePath.replace('/resources/', '');
-                 const yearSem = `${profile.year}${profile.semester}`;
-                 return `/${regulation}/${profile.branch.toLowerCase()}/${yearSem}/${cleanCategory}`;
-             }
+            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+            const regulation = match ? match[1] : 'r23';
+
+            if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
+                const cleanCategory = basePath.replace('/resources/', '');
+                const yearSem = `${profile.year}${profile.semester}`;
+                return `/${regulation}/${profile.branch.toLowerCase()}/${yearSem}/${cleanCategory}`;
+            }
         }
 
         // Fallback to legacy query params
@@ -77,12 +78,38 @@ export function DashboardClient() {
         }
     }
 
+
+    // Prefetching
+    const queryClient = useQueryClient()
+
+    const prefetchCategory = (category: string) => {
+        if (!profile?.branch || !profile?.year || !profile?.semester) return
+
+        const params = new URLSearchParams()
+        params.append('category', category.toLowerCase())
+        // We don't have subject/unit here, typically just category listing or default
+        params.append('branch', profile.branch)
+        params.append('year', String(profile.year))
+        params.append('semester', String(profile.semester))
+
+        queryClient.prefetchQuery({
+            queryKey: ['resources', category.toLowerCase(), undefined, undefined, profile.year, profile.branch, profile.semester],
+            queryFn: async () => {
+                const res = await fetch(`/api/resources?${params.toString()}`)
+                if (!res.ok) throw new Error('Failed to fetch resources')
+                return res.json()
+            },
+            staleTime: 1000 * 60 * 5 // 5 min
+        })
+    }
+
     const categories = [
         {
             name: "Notes",
             description: "Lecture notes and study materials",
             icon: FileText,
             path: "/resources/notes",
+            categoryKey: "notes",
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
@@ -91,6 +118,7 @@ export function DashboardClient() {
             description: "Assignment questions all batches",
             icon: BookOpen,
             path: "/resources/assignments",
+            categoryKey: "assignments",
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
@@ -99,6 +127,7 @@ export function DashboardClient() {
             description: "mid-1, mid-2, previous year papers",
             icon: FileCheck,
             path: "/resources/papers",
+            categoryKey: "papers",
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
@@ -107,6 +136,7 @@ export function DashboardClient() {
             description: "records and manuals for specific weeks",
             icon: Database,
             path: "/resources/records",
+            categoryKey: "records",
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
@@ -114,9 +144,9 @@ export function DashboardClient() {
 
     const breadcrumbs = useMemo(() => {
         if (profile?.branch && profile?.year && profile?.semester) {
-             const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
-             const regulation = match ? match[1] : 'r23';
-             return generateBreadcrumbs(regulation, profile.branch.toLowerCase(), `${profile.year}${profile.semester}`);
+            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+            const regulation = match ? match[1] : 'r23';
+            return generateBreadcrumbs(regulation, profile.branch.toLowerCase(), `${profile.year}${profile.semester}`);
         }
         return [{ label: "♡", isCurrentPage: true }];
     }, [profile]);
@@ -170,7 +200,12 @@ export function DashboardClient() {
             {/* Main Grid - Resource Categories */}
             <div id="resources" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {categories.map((category) => (
-                    <Link key={category.name} href={getCategoryPath(category.path)} className="block">
+                    <Link
+                        key={category.name}
+                        href={getCategoryPath(category.path)}
+                        className="block"
+                        onMouseEnter={() => prefetchCategory(category.categoryKey)}
+                    >
                         <Card className="h-full transition-all-smooth hover-lift">
                             <CardHeader className={`rounded-t-lg ${category.color}`}>
                                 <div className="flex items-center gap-3">
