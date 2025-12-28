@@ -89,19 +89,6 @@ export function useResources({ category, subject, unit, year, branch, semester, 
   })
 }
 
-// Hook: useStaticData
-function useStaticData() {
-  return useQuery({
-    queryKey: ['static-data'],
-    queryFn: async () => {
-      // leveraging the bulk endpoint for now as it caches static data effectively on server
-      const data = await fetchApi<any>('/api/fetch-academic-data')
-      return data.static as StaticDataResponse
-    },
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours
-  })
-}
-
 // Hook: useDynamicData
 export function useDynamicData({ branch, year, enabled = true }: UseDynamicDataParams) {
   return useQuery({
