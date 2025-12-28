@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">29.16% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/24</span>
+                <span class='fraction'>0/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">29.16% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/24</span>
+                <span class='fraction'>0/24</span>
             </div>
         
             
@@ -121,34 +121,34 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export interface LocalProfile {
   name: string
   roll_number: string
@@ -164,15 +164,15 @@
   semester_id?: string
 }
 &nbsp;
-const LOCAL_STORAGE_KEY = 'pecup_local_profile'
+<span class="cstat-no" title="statement not covered" >const LOCAL_STORAGE_KEY = 'pecup_local_profile'</span>
 &nbsp;
-export const LocalProfileService = {
-  save: <span class="fstat-no" title="function not covered" >(profile: LocalProfile) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >export const LocalProfileService = {</span>
+<span class="cstat-no" title="statement not covered" >  save: (profile: LocalProfile) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (typeof window === 'undefined') return</span>
 <span class="cstat-no" title="statement not covered" >    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(profile))</span>
 <span class="cstat-no" title="statement not covered" >  },</span>
 &nbsp;
-  get: <span class="fstat-no" title="function not covered" >(): LocalProfile | null =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  get: (): LocalProfile | null =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (typeof window === 'undefined') return null</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      const data = localStorage.getItem(LOCAL_STORAGE_KEY)</span>
@@ -183,15 +183,15 @@ export const LocalProfileService = {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  },</span>
 &nbsp;
-  clear: <span class="fstat-no" title="function not covered" >() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  clear: () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (typeof window === 'undefined') return</span>
 <span class="cstat-no" title="statement not covered" >    localStorage.removeItem(LOCAL_STORAGE_KEY)</span>
 <span class="cstat-no" title="statement not covered" >  },</span>
 &nbsp;
-  hasProfile: <span class="fstat-no" title="function not covered" >(): boolean =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  hasProfile: (): boolean =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return !!LocalProfileService.get()</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-}
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -199,7 +199,7 @@ export const LocalProfileService = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-27T15:27:06.339Z
+                at 2025-12-28T06:31:21.655Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

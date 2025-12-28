@@ -7,6 +7,8 @@ import { createSupabaseAdmin } from '@/lib/supabase';
 import { Resource, ResourceFilters } from '@/lib/types';
 import { academicConfig } from '@/lib/academic-config';
 import { getOrSetCache } from '@/lib/redis';
+import { apiError } from '@/lib/api-utils';
+import { YEAR_TO_BATCH_MAPPING, CACHE_TTL } from '@/lib/constants';
 
 export async function GET(request: Request) {
   console.log(`\nAPI Route: Received request at ${new Date().toISOString()}`);
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
   const cacheKey = `resources:v3:${sortedParams}`;
 
   try {
-    const data = await getOrSetCache(cacheKey, 300, async () => { // Cache for 5 minutes
+    const data = await getOrSetCache(cacheKey, CACHE_TTL.RESOURCES, async () => { // Cache for 5 minutes
       const supabaseAdmin = createSupabaseAdmin();
       const category = searchParams.get('category')?.toLowerCase();
       const encodedSubject = searchParams.get('subject');
@@ -71,14 +73,7 @@ export async function GET(request: Request) {
           }
 
           // Map old year numbers (1,2,3,4) to batch years based on current academic progression
-          // This should match the academic config mappings
-          const yearToBatchMapping: Record<number, number> = {
-            1: 2024, // Year 1 -> 2024 batch (no 2025 batch in DB, use most recent)
-            2: 2024, // Year 2 -> 2024 batch (2024 batch is currently Year 2)
-            3: 2023, // Year 3 -> 2023 batch (2023 batch is currently Year 3)
-            4: 2022  // Year 4 -> 2022 batch (2022 batch is currently Year 4)
-          };
-          const batchYear = yearToBatchMapping[yearNum] || 2024;
+          const batchYear = YEAR_TO_BATCH_MAPPING[yearNum] || 2024;
 
           const { data: year } = await supabaseAdmin
             .from('years')
@@ -259,14 +254,14 @@ export async function GET(request: Request) {
     });
 
     if (data && typeof data === 'object' && 'error' in data) {
-        return NextResponse.json(data, { status: (data as any).status || 500 });
+        return apiError((data as any).error, (data as any).status || 500);
     }
 
     return NextResponse.json(data as unknown as Resource[]);
 
   } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to load resources from database' }, { status: 500 });
+    return apiError('Failed to load resources from database', 500);
   }
 }
 

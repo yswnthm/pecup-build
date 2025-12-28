@@ -19,3 +19,9 @@
 
 ## Testing
 *   **Test Runner:** Vitest
+*   **Coverage Provider:** v8
+
+## Tooling & Quality
+*   **Dead Code Elimination:** Knip
+*   **Dependency Management:** Bun
+*   **Standardization:** Centralized constants and API utilities

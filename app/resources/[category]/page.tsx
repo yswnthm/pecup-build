@@ -10,25 +10,7 @@ import { useProfile } from '@/lib/enhanced-profile-context'
 import { useDynamicData } from '@/hooks/use-academic-data'
 import { notFound } from 'next/navigation'
 import ResourcesFiltersClient from './ResourcesFiltersClient'
-
-const resourceData = {
-  notes: {
-    title: "Notes",
-    description: "Lecture notes and study materials",
-  },
-  assignments: {
-    title: "Assignments",
-    description: "Assignment questions all batches",
-  },
-  papers: {
-    title: "Papers",
-    description: "Mid-1, Mid-2, Previous year papers",
-  },
-  records: {
-    title: "Records",
-    description: "Records and manuals for specific weeks",
-  },
-} as const
+import { CATEGORY_TITLES, CATEGORY_DESCRIPTIONS } from '@/lib/constants'
 
 export default function CategoryPage({ params, searchParams }: {
   params: Promise<{ category: string }>
@@ -64,10 +46,11 @@ export default function CategoryPage({ params, searchParams }: {
   const { category } = unwrappedParams
   // const resolvedSearchParams = searchParams // unused
 
-  if (!resourceData[category as keyof typeof resourceData]) {
+  if (!CATEGORY_TITLES[category as keyof typeof CATEGORY_TITLES]) {
     notFound()
   }
-  const categoryData = resourceData[category as keyof typeof resourceData]
+  const categoryTitle = CATEGORY_TITLES[category as keyof typeof CATEGORY_TITLES];
+  const categoryDescription = CATEGORY_DESCRIPTIONS[category as keyof typeof CATEGORY_DESCRIPTIONS];
 
   return (
     <div className="space-y-4 p-4 md:p-6 lg:p-8">
@@ -79,7 +62,7 @@ export default function CategoryPage({ params, searchParams }: {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
               <Link href="/" className="hover:text-foreground">Home</Link>
               <ChevronRight className="h-4 w-4" />
-              <span aria-current="page">{categoryData.title}</span>
+              <span aria-current="page">{categoryTitle}</span>
             </nav>
           </div>
           <div className="flex items-center gap-4">
@@ -100,12 +83,15 @@ export default function CategoryPage({ params, searchParams }: {
       <div className="space-y-6">
         <div className="space-y-2">
           <div className="flex items-start justify-center">
-            <h1 className="text-3xl font-bold tracking-tight text-center">{categoryData.title}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-center">{categoryTitle}</h1>
           </div>
-          <p className="text-muted-foreground text-center">{categoryData.description}</p>
+          <p className="text-muted-foreground text-center">{categoryDescription}</p>
         </div>
 
-        <ResourcesFiltersClient category={category} categoryData={categoryData} />
+        <ResourcesFiltersClient 
+          category={category} 
+          categoryData={{ title: categoryTitle, description: categoryDescription }} 
+        />
 
       </div>
     </div>

@@ -42,7 +42,13 @@ export interface Semester {
   semester_number: number;
 }
 
-export interface RepresentativeBase {
+export interface RepresentativeWithRelations extends Representative {
+  branch?: Branch;
+  year?: Year;
+}
+
+// Keep for backward compatibility - represents the expanded graph
+export interface Representative {
   id: string;
   user_id: string;
   branch_id: string;
@@ -50,15 +56,6 @@ export interface RepresentativeBase {
   assigned_by: string;
   assigned_at: string;
   active: boolean;
-}
-
-export interface RepresentativeWithRelations extends RepresentativeBase {
-  branch?: Branch;
-  year?: Year;
-}
-
-// Keep for backward compatibility - represents the expanded graph
-export interface Representative extends RepresentativeBase {
   branches?: Branch;
   years?: Year;
 }

@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { Subject, Resource, Branch, Year, Semester } from '@/lib/types'
+import { fetchApi } from '@/lib/api-utils'
+import { CACHE_TTL } from '@/lib/constants'
 
 // Response types
 interface SubjectsResponse {
@@ -59,14 +61,10 @@ export function useSubjects({ year, branch, semester, regulation, resourceType, 
       if (regulation) params.append('regulation', regulation)
       if (resourceType) params.append('resource_type', resourceType)
 
-      const res = await fetch(`/api/subjects?${params.toString()}`)
-      if (!res.ok) {
-        throw new Error('Failed to fetch subjects')
-      }
-      return res.json() as Promise<SubjectsResponse>
+      return fetchApi<SubjectsResponse>(`/api/subjects?${params.toString()}`)
     },
     enabled: enabled && !!year && !!branch && !!semester,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: CACHE_TTL.SUBJECTS * 1000,
   })
 }
 
@@ -85,29 +83,10 @@ export function useResources({ category, subject, unit, year, branch, semester, 
       if (semester) params.append('semester', String(semester))
       if (regulation) params.append('regulation', regulation)
 
-      const res = await fetch(`/api/resources?${params.toString()}`)
-      if (!res.ok) {
-        throw new Error('Failed to fetch resources')
-      }
-      return res.json() as Promise<Resource[]>
+      return fetchApi<Resource[]>(`/api/resources?${params.toString()}`)
     },
     enabled: enabled && !!category && !!subject,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  })
-}
-
-// Hook: useStaticData
-export function useStaticData() {
-  return useQuery({
-    queryKey: ['static-data'],
-    queryFn: async () => {
-      // leveraging the bulk endpoint for now as it caches static data effectively on server
-      const res = await fetch('/api/fetch-academic-data')
-      if (!res.ok) throw new Error('Failed to fetch static data')
-      const data = await res.json()
-      return data.static as StaticDataResponse
-    },
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: CACHE_TTL.RESOURCES * 1000,
   })
 }
 
@@ -120,12 +99,10 @@ export function useDynamicData({ branch, year, enabled = true }: UseDynamicDataP
       if (branch) params.append('branch', branch)
       if (year) params.append('year', String(year))
 
-      const res = await fetch(`/api/fetch-academic-data?${params.toString()}`)
-      if (!res.ok) throw new Error('Failed to fetch dynamic data')
-      const data = await res.json()
+      const data = await fetchApi<any>(`/api/fetch-academic-data?${params.toString()}`)
       return data.dynamic as DynamicDataResponse
     },
     enabled: enabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: CACHE_TTL.DYNAMIC_DATA * 1000,
   })
 }

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { createSupabaseAdmin } from '@/lib/supabase'
 import { getOrSetCache } from '@/lib/redis'
+import { apiError } from '@/lib/api-utils'
+import { DEFAULT_REGULATION, CACHE_TTL } from '@/lib/constants'
 
 export const runtime = 'nodejs'
 
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
   const cacheKey = `subjects:v2:${regulationKey}:${branchKey}:${yearKey}:${semesterKey}:${typeKey}`
 
   try {
-    const data = await getOrSetCache(cacheKey, 3600, async () => { // Cache for 1 hour
+    const data = await getOrSetCache(cacheKey, CACHE_TTL.SUBJECTS, async () => { // Cache for 1 hour
       const supabase = createSupabaseAdmin()
 
       console.log(`[DEBUG] Initial params - regulation: ${regulation}, year: ${year}, branch: ${branch}, semester: ${semester}`)
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
       }
 
       // Default regulation if not provided
-      const targetRegulation = regulation || 'R23'
+      const targetRegulation = regulation || DEFAULT_REGULATION;
 
       console.log(`[DEBUG] Final params - regulation: ${targetRegulation}, year: ${year}, branch: ${branch}, semester: ${semester}, resource_type: ${resourceType}`)
 
@@ -148,12 +150,12 @@ export async function GET(request: Request) {
     })
 
     if (data.error) {
-      return NextResponse.json({ error: data.error, details: data.details }, { status: data.status || 500 })
+      return apiError(data.error, data.status || 500, undefined, data.details)
     }
 
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 })
+    return apiError('Unexpected server error', 500)
   }
 }
 

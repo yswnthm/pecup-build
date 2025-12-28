@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { apiSuccess, apiError } from '@/lib/api-utils';
 import { createSupabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -14,17 +14,17 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching profiles count:', error);
-      return NextResponse.json({ error: 'Failed to fetch users count' }, { status: 500 });
+      return apiError('Failed to fetch users count', 500);
     }
 
     const totalUsers = count || 0;
 
-    return NextResponse.json({
+    return apiSuccess({
       totalUsers,
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {
     console.error('Users count API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('Internal server error', 500);
   }
 }

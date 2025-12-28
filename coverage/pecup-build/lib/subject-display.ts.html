@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">90.9% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>20/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -98,26 +98,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use client'
 &nbsp;
@@ -126,26 +126,26 @@ interface SubjectLike {
   name?: string
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function getSubjectDisplay(subject: SubjectLike, preferAbbreviation = true): string {</span>
-<span class="cstat-no" title="statement not covered" >  const code = subject?.code?.trim()</span>
-<span class="cstat-no" title="statement not covered" >  const name = subject?.name?.trim()</span>
-<span class="cstat-no" title="statement not covered" >  if (preferAbbreviation &amp;&amp; code) return code.toUpperCase()</span>
-<span class="cstat-no" title="statement not covered" >  return name || code?.toUpperCase() || ''</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+export function getSubjectDisplay(subject: SubjectLike, preferAbbreviation = true): string {
+  const code = subject?.code?.trim()
+  const name = subject?.name?.trim()
+  if (preferAbbreviation &amp;&amp; code) return code.toUpperCase()
+  return name || code?.toUpperCase() || ''
+}
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function getSubjectDisplayByCode(</span>
-<span class="cstat-no" title="statement not covered" >  subjects: SubjectLike[] | undefined,</span>
-<span class="cstat-no" title="statement not covered" >  codeOrSlug: string,</span>
-<span class="cstat-no" title="statement not covered" >  preferAbbreviation = true</span>
-<span class="cstat-no" title="statement not covered" >): string {</span>
-<span class="cstat-no" title="statement not covered" >  if (!codeOrSlug) return ''</span>
-<span class="cstat-no" title="statement not covered" >  const normalized = codeOrSlug.trim().toLowerCase()</span>
-<span class="cstat-no" title="statement not covered" >  if (normalized === '') return ''</span>
-<span class="cstat-no" title="statement not covered" >  const list = Array.isArray(subjects) ? subjects : []</span>
-<span class="cstat-no" title="statement not covered" >  const found = list.find(s =&gt; (s.code || '').toLowerCase() === normalized)</span>
-<span class="cstat-no" title="statement not covered" >  if (found) return getSubjectDisplay(found, preferAbbreviation)</span>
-<span class="cstat-no" title="statement not covered" >  return preferAbbreviation ? normalized.toUpperCase() : normalized</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+export function getSubjectDisplayByCode(
+  subjects: SubjectLike[] | undefined,
+  codeOrSlug: string,
+  preferAbbreviation = true
+): string {
+  if (!codeOrSlug) return ''
+  const normalized = codeOrSlug.trim().toLowerCase()
+  if (normalized === '') <span class="branch-0 cbranch-no" title="branch not covered" >return ''</span>
+  const list = Array.isArray(subjects) ? subjects : []
+  const found = list.find(s =&gt; (s.<span class="branch-0 cbranch-no" title="branch not covered" >code || '').t</span>oLowerCase() === normalized)
+  if (found) return getSubjectDisplay(found, preferAbbreviation)
+  return preferAbbreviation ? normalized.toUpperCase() : normalized
+}
 &nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -154,7 +154,7 @@ interface SubjectLike {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-27T15:27:06.339Z
+                at 2025-12-28T06:31:21.655Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

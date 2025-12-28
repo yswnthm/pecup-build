@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createSupabaseAdmin } from '@/lib/supabase';
 import { academicConfig } from '@/lib/academic-config';
+import { apiError } from '@/lib/api-utils';
 
 // Helper function to sanitize payload for logging
 function sanitizeForLogging(payload: any): any {
@@ -58,9 +59,9 @@ function validatePayload(body: any): { ok: true; data: ProfilePayload } | { ok: 
 }
 
 export async function GET() {
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  return apiError('Unauthorized', 401);
 }
 
 export async function POST(request: Request) {
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  return apiError('Unauthorized', 401);
 }

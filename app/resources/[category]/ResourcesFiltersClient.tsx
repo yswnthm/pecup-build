@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Subject } from '@/lib/enhanced-profile-context'
@@ -32,82 +32,73 @@ export default function ResourcesFiltersClient({ category, categoryData, context
   const { profile } = useProfile()
 
   // Determine context params
-  let year: string | number | null | undefined = searchParams.get('year')
-  let branch: string | null | undefined = searchParams.get('branch')
-  let semester: string | number | null | undefined = searchParams.get('semester')
-  let regulation: string | null | undefined = searchParams.get('regulation')
+  const contextParams = useMemo(() => {
+    let year: string | number | null | undefined = searchParams.get('year')
+    let branch: string | null | undefined = searchParams.get('branch')
+    let semester: string | number | null | undefined = searchParams.get('semester')
+    let regulation: string | null | undefined = searchParams.get('regulation')
 
-  if (context) {
-    branch = context.branch
-    regulation = context.regulation
-    // naive parsing of yearSem "31" -> year 3, sem 1
-    if (context.yearSem.length === 2) {
-      year = context.yearSem.charAt(0)
-      semester = context.yearSem.charAt(1)
+    if (context) {
+      branch = context.branch
+      regulation = context.regulation
+      if (context.yearSem.length === 2) {
+        year = context.yearSem.charAt(0)
+        semester = context.yearSem.charAt(1)
+      }
+    } else if (!year && !branch && profile) {
+      year = profile.year
+      branch = profile.branch
+      semester = profile.semester
     }
-  } else if (!year && !branch && profile) {
-    // Fallback to profile if no explicit params
-    year = profile.year
-    branch = profile.branch
-    semester = profile.semester
-    // Note: profile might not have regulation explicitly if not updated in type, 
-    // but usually URL context is main driver now. 
-  }
 
-  const resourceType = getResourceTypeForCategory(category)
+    return { year, branch, semester, regulation }
+  }, [searchParams, context, profile])
+
+  const { year, branch, semester, regulation } = contextParams
+
+  const resourceType = useMemo(() => getResourceTypeForCategory(category), [category])
 
   const { data: subjectsData, isLoading } = useSubjects({
     year,
     branch,
     semester,
-    regulation, // Pass regulation to hook
+    regulation, 
     resourceType: resourceType || undefined,
     enabled: !!year && !!branch && !!semester
   })
 
-  // useSubjects returns { subjects: [...] }
-  const subjects = subjectsData?.subjects || []
+  const subjects = useMemo(() => subjectsData?.subjects || [], [subjectsData])
 
-  // If resourceType was passed to API, it's already filtered. 
-  // But we can double check or just use it directly. 
-  // The API filter logic matches the previous client-side logic.
-  const filteredSubjects = subjects as ResourceSubject[]
+  const getSubjectHref = useCallback((s: ResourceSubject) => {
+    if (context) {
+      return `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`
+    } else {
+      const qp = new URLSearchParams()
+      if (year) qp.set('year', String(year))
+      if (semester) qp.set('semester', String(semester))
+      if (branch) qp.set('branch', branch || '')
+      const q = qp.toString()
+      return `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
+    }
+  }, [context, category, year, semester, branch])
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {!isLoading && filteredSubjects.map((s: ResourceSubject) => {
-          let href: string;
-
-          if (context) {
-            // Use hierarchical URL if context is provided
-            href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`
-          } else {
-            // Fallback to legacy query params
-            const qp = new URLSearchParams()
-            // Use the resolved values for links to persist context
-            if (year) qp.set('year', String(year))
-            if (semester) qp.set('semester', String(semester))
-            if (branch) qp.set('branch', branch || '')
-            const q = qp.toString()
-            href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
-          }
-
-          return (
-            <Link key={s.code} href={href} className="block">
-              <Card className="h-full transition-all-smooth hover-lift">
-                <CardHeader>
-                  <CardTitle>{getSubjectDisplay(s, true)}</CardTitle>
-                  <CardDescription>Explore resources and tools for {categoryData.title.toUpperCase()}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-end">
-                  <ChevronRight className="h-5 w-5 text-primary" />
-                </CardContent>
-              </Card>
-            </Link>
-          )
-        })}
-        {!isLoading && filteredSubjects.length === 0 && (
+        {!isLoading && (subjects as any[]).map((s: ResourceSubject) => (
+          <Link key={s.code} href={getSubjectHref(s)} className="block">
+            <Card className="h-full transition-all-smooth hover-lift">
+              <CardHeader>
+                <CardTitle>{getSubjectDisplay(s, true)}</CardTitle>
+                <CardDescription>Explore resources and tools for {categoryData.title.toUpperCase()}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <ChevronRight className="h-5 w-5 text-primary" />
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+        {!isLoading && subjects.length === 0 && (
           <div className="text-sm text-muted-foreground col-span-full text-center p-8">
             No subjects found for {branch?.toUpperCase()} {year}-{semester}.
           </div>

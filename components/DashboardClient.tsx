@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import Link from "next/link"
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -12,13 +12,26 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 
 import { Header } from '@/components/Header'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/components/ui/skeleton'
 
-import Hero from '@/components/Hero'
+const Hero = dynamic(() => import('@/components/Hero'), {
+    loading: () => <Skeleton className="h-[200px] w-full" />,
+})
+
+const UpcomingExams = dynamic(() => import('@/components/UpcomingExams'), {
+    ssr: false,
+})
+
+const RecentUpdates = dynamic(() => import('@/components/RecentUpdates'), {
+    ssr: false,
+})
 
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { useDynamicData } from '@/hooks/use-academic-data'
+import { CATEGORY_TITLES, CATEGORY_DESCRIPTIONS } from '@/lib/constants'
 
 // Types
 type Exam = {
@@ -41,9 +54,9 @@ export function DashboardClient() {
     })
 
     // Construct query params for resource links or context-based paths
-    const getCategoryPath = (basePath: string) => {
+    const getCategoryPath = useCallback((basePath: string) => {
         if (profile?.branch && profile?.year && profile?.semester) {
-            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\/\//i) : null;
             const regulation = match ? match[1] : 'r23';
 
             if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
@@ -60,10 +73,10 @@ export function DashboardClient() {
         if (profile?.branch) p.set('branch', profile.branch)
         const s = p.toString()
         return `${basePath}${s ? `?${s}` : ''}`
-    }
+    }, [profile])
 
     // Helpers
-    const getRoleDisplay = (role: string) => {
+    const getRoleDisplay = useCallback((role: string) => {
         switch (role) {
             case 'student':
                 return <Badge variant="secondary">Student</Badge>
@@ -76,13 +89,13 @@ export function DashboardClient() {
             default:
                 return <Badge variant="outline">{role}</Badge>
         }
-    }
+    }, [])
 
 
     // Prefetching
     const queryClient = useQueryClient()
 
-    const prefetchCategory = (category: string) => {
+    const prefetchCategory = useCallback((category: string) => {
         if (!profile?.branch || !profile?.year || !profile?.semester) return
 
         const params = new URLSearchParams()
@@ -101,12 +114,12 @@ export function DashboardClient() {
             },
             staleTime: 1000 * 60 * 5 // 5 min
         })
-    }
+    }, [profile, queryClient])
 
-    const categories = [
+    const categories = useMemo(() => [
         {
-            name: "Notes",
-            description: "Lecture notes and study materials",
+            name: CATEGORY_TITLES.notes,
+            description: CATEGORY_DESCRIPTIONS.notes,
             icon: FileText,
             path: "/resources/notes",
             categoryKey: "notes",
@@ -114,8 +127,8 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Assignments",
-            description: "Assignment questions all batches",
+            name: CATEGORY_TITLES.assignments,
+            description: CATEGORY_DESCRIPTIONS.assignments,
             icon: BookOpen,
             path: "/resources/assignments",
             categoryKey: "assignments",
@@ -123,8 +136,8 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Papers",
-            description: "mid-1, mid-2, previous year papers",
+            name: CATEGORY_TITLES.papers,
+            description: CATEGORY_DESCRIPTIONS.papers,
             icon: FileCheck,
             path: "/resources/papers",
             categoryKey: "papers",
@@ -132,15 +145,15 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Records",
-            description: "records and manuals for specific weeks",
+            name: CATEGORY_TITLES.records,
+            description: CATEGORY_DESCRIPTIONS.records,
             icon: Database,
             path: "/resources/records",
             categoryKey: "records",
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
-    ]
+    ], [])
 
     const breadcrumbs = useMemo(() => {
         if (profile?.branch && profile?.year && profile?.semester) {
@@ -263,68 +276,10 @@ export function DashboardClient() {
             )}
 
             {/* Upcoming Exams (from dynamicData) */}
-            {dynamicData?.upcomingExams && dynamicData.upcomingExams.length > 0 && (
-                <div className="mt-8">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <CalendarDays className="h-5 w-5 text-primary" />
-                                <CardTitle>Upcoming Exams (next 5 days)</CardTitle>
-                            </div>
-                            <CardDescription>Based on your branch and year</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {dynamicData.upcomingExams.map((exam: Exam, idx: number) => (
-                                    <div key={`${exam.subject}-${exam.exam_date}-${idx}`} className="flex items-center justify-between border-l-4 border-primary pl-4">
-                                        <div>
-                                            <h3 className="font-medium">{exam.subject}</h3>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                <Clock className="h-3 w-3" /> {exam.exam_date && !isNaN(new Date(exam.exam_date).getTime()) ? new Date(exam.exam_date).toDateString() : "Date unavailable"}
-                                            </p>
-                                        </div>
-                                        <Badge variant="outline">{exam.branch} • {exam.year}</Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+            <UpcomingExams exams={dynamicData?.upcomingExams || []} />
 
             {/* Recent Updates */}
-            <div className="mt-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Updates</CardTitle>
-                        <CardDescription>Latest changes to the resource hub</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {dynamicLoading && (
-                            <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                                <span className="ml-2 text-muted-foreground">Loading updates...</span>
-                            </div>
-                        )}
-                        {!dynamicLoading && updates.length > 0 && (
-                            <div className="space-y-4">
-                                {updates.map((update: any) => (
-                                    <div key={update.id} className="border-l-4 border-primary pl-4 transition-colors hover:bg-muted/50 py-1">
-                                        <h3 className="font-medium">
-                                            {update.title}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground">{update.date}</p>
-                                        {update.description && <p className="text-sm text-muted-foreground mt-1">{update.description}</p>}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {!dynamicLoading && updates.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-4">No recent updates found.</p>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+            <RecentUpdates updates={updates} isLoading={dynamicLoading} />
 
 
         </motion.div>
