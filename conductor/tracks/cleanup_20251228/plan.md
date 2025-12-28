@@ -17,7 +17,7 @@
 - [x] Task: Centralize UI components (consolidate fragmented components into `components/ui/`) 412727f
 - [x] Task: Refactor API routes to use a standardized response/error structure e0872e5
 - [x] Task: Refactor data fetching hooks for consistent patterns 89093be
-- [~] Task: Extract hardcoded strings and magic numbers into `lib/constants.ts` or config files
+- [x] Task: Extract hardcoded strings and magic numbers into `lib/constants.ts` or config files 224d58c
 - [ ] Task: Update/Write tests for standardized components and hooks
 - [ ] Task: Conductor - User Manual Verification 'Standardization & Refactoring' (Protocol in workflow.md)
 
