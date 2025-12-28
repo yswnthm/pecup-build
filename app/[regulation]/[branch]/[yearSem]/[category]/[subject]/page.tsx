@@ -17,7 +17,6 @@ import { getResourceTypeForCategory } from '@/lib/resource-utils'
 import { useProfile, type Subject } from '@/lib/enhanced-profile-context'
 import { getSubjectDisplayByCode } from '@/lib/subject-display'
 import { Resource } from '@/lib/types'
-import { ResourcesCache } from '@/lib/simple-cache'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 
 // DTO type that matches the API response format
@@ -238,7 +237,7 @@ export default function ContextSubjectPage({
 
   // Fetch logic adapted for context
   useEffect(() => {
-    async function fetchResources(forceRefresh = false) {
+    async function fetchResources() {
       lastFetchRef.current = Date.now()
       setLoading(true)
       setError(null)
@@ -248,33 +247,14 @@ export default function ContextSubjectPage({
       const qpSem = String(contextSemester)
       const qpBranch = branch
 
-      const cacheKey = `resources_${category}_${resolvedSubjectCode}_${qpYear}_${qpSem}_${qpBranch}`
-
-      if (forceRefresh) {
-        ResourcesCache.clearAll()
-      }
-
       // Check bulk resources (legacy support)
-      if (!forceRefresh && bulkResources && typeof bulkResources === 'object') {
+      if (bulkResources && typeof bulkResources === 'object') {
         const subjectLower = resolvedSubjectCode.toLowerCase()
         const subjectResources = bulkResources[subjectLower]
         if (subjectResources && typeof subjectResources === 'object') {
           const categoryResources = subjectResources[category]
           if (Array.isArray(categoryResources) && categoryResources.length > 0) {
             setResources(categoryResources.map(transformResourceDTOToResource))
-            setLoading(false)
-            return
-          }
-        }
-      }
-
-      // Check Cache
-      if (!forceRefresh) {
-        const cached = ResourcesCache.get(category, resolvedSubjectCode, qpYear, qpSem, qpBranch)
-        if (cached) {
-          const metadata = ResourcesCache.getCacheMetadata(category, resolvedSubjectCode, qpYear, qpSem, qpBranch)
-          if (metadata && !metadata.isExpired) {
-            setResources(cached)
             setLoading(false)
             return
           }
@@ -298,7 +278,6 @@ export default function ContextSubjectPage({
         const transformedResources = apiResources.map(transformResourceDTOToResource)
 
         setResources(transformedResources)
-        ResourcesCache.set(category, resolvedSubjectCode, transformedResources, qpYear, qpSem, qpBranch)
       } catch (err: any) {
         setError(err.message || 'Failed to load resources')
       } finally {
@@ -306,8 +285,7 @@ export default function ContextSubjectPage({
       }
     }
 
-    const isForceRefresh = refreshTrigger > 0
-    fetchResources(isForceRefresh)
+    fetchResources()
   }, [category, resolvedSubjectCode, contextYear, contextSemester, branch, refreshTrigger, bulkResources])
 
   useEffect(() => {

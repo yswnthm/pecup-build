@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { ProfileCache, StaticCache, SubjectsCache, DynamicCache, ProfileDisplayCache, ResourcesCache } from './simple-cache'
-import { PerfMon } from './performance-monitor'
+
 
 
 // Narrow shapes for bulk static and dynamic data with safe extensibility
@@ -271,28 +270,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 
 
-	// Refresh dynamic data on tab visibility change if cache expired
-	useEffect(() => {
-		const onVisibilityChange = () => {
-			if (document.visibilityState === 'visible' && profile) {
-				const cachedDynamic = DynamicCache.get(isEnhancedProfileDynamicData)
-				if (!cachedDynamic) {
-					fetchContextData(profile).catch((err) => {
-						if (process.env.NODE_ENV !== 'production') {
-							// eslint-disable-next-line no-console
-							console.error('visibilitychange refresh failed:', err)
-						}
-					})
-				}
-			}
-		}
 
-		document.addEventListener('visibilitychange', onVisibilityChange)
-		return () => {
-			document.removeEventListener('visibilitychange', onVisibilityChange)
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [profile])
 
 
 	return (
