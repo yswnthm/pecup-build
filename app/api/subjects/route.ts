@@ -9,29 +9,35 @@ export const runtime = 'nodejs'
 export async function GET(request: Request) {
   const url = new URL(request.url)
   let year = url.searchParams.get('year')
-  let branch = url.searchParams.get('branch')
+  const branchRaw = url.searchParams.get('branch')
   let semester = url.searchParams.get('semester')
+  const regulationRaw = url.searchParams.get('regulation')
   const resourceType = url.searchParams.get('resource_type') // 'resources', 'records', or null for all
 
+  // Normalize inputs to match DB case (uppercase)
+  let branch = branchRaw ? branchRaw.toUpperCase() : null
+  let regulation = regulationRaw ? regulationRaw.toUpperCase() : null
+
   // Normalize params for cache key
+  const regulationKey = regulation || 'default'
   const yearKey = year || 'default'
   const branchKey = branch || 'default'
   const semesterKey = semester || 'default'
   const typeKey = resourceType || 'all'
-  const cacheKey = `subjects:v2:${branchKey}:${yearKey}:${semesterKey}:${typeKey}`
+  const cacheKey = `subjects:v2:${regulationKey}:${branchKey}:${yearKey}:${semesterKey}:${typeKey}`
 
   try {
     const data = await getOrSetCache(cacheKey, 3600, async () => { // Cache for 1 hour
       const supabase = createSupabaseAdmin()
-      
-      console.log(`[DEBUG] Initial params - year: ${year}, branch: ${branch}, semester: ${semester}`)
-      
+
+      console.log(`[DEBUG] Initial params - regulation: ${regulation}, year: ${year}, branch: ${branch}, semester: ${semester}`)
+
       // Infer from profile ONLY if not provided in URL
       if (!year || !branch || !semester) {
         const session = await getServerSession(authOptions)
         const email = session?.user?.email?.toLowerCase()
         console.log(`[DEBUG] User email: ${email}`)
-        
+
         if (email) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -39,10 +45,10 @@ export async function GET(request: Request) {
             .eq('email', email)
             .maybeSingle()
           console.log(`[DEBUG] User profile:`, profile)
-          
+
           if (profile) {
             year = year || String(profile.year)
-            branch = branch || String(profile.branch)
+            branch = branch || (profile.branch ? String(profile.branch).toUpperCase() : null)
           }
         }
         if (!semester) {
@@ -51,7 +57,10 @@ export async function GET(request: Request) {
         }
       }
 
-      console.log(`[DEBUG] Final params - year: ${year}, branch: ${branch}, semester: ${semester}, resource_type: ${resourceType}`)
+      // Default regulation if not provided
+      const targetRegulation = regulation || 'R23'
+
+      console.log(`[DEBUG] Final params - regulation: ${targetRegulation}, year: ${year}, branch: ${branch}, semester: ${semester}, resource_type: ${resourceType}`)
 
       if (!year || !branch || !semester) {
         // Return null to indicate missing context (will be handled outside)
@@ -59,13 +68,13 @@ export async function GET(request: Request) {
       }
 
       // Try to get subjects from subject_offerings first (proper way)
-      console.log(`[DEBUG] Subjects API - Looking for offerings: regulation=R23, year=${year}, branch=${branch}, semester=${semester}`)
-      
+      console.log(`[DEBUG] Subjects API - Looking for offerings: regulation=${targetRegulation}, year=${year}, branch=${branch}, semester=${semester}`)
+
       // Get subject_offerings first
       const { data: offeringsData, error: offeringsError } = await supabase
         .from('subject_offerings')
         .select('subject_id, display_order')
-        .eq('regulation', 'R23')
+        .eq('regulation', targetRegulation)
         .eq('year', parseInt(year, 10))
         .eq('branch', branch)
         .eq('semester', parseInt(semester, 10))
@@ -77,7 +86,7 @@ export async function GET(request: Request) {
       // Handle database query error
       if (offeringsError) {
         console.error(`[ERROR] Subjects API - Database error:`, offeringsError)
-        return { 
+        return {
           error: 'Database error occurred while fetching subjects',
           details: offeringsError.message,
           status: 500
@@ -110,7 +119,7 @@ export async function GET(request: Request) {
 
           const uniqueCodes = Array.from(new Set((resourcesData || []).map((r: any) => (r.subject || '').toUpperCase()).filter(Boolean)))
           const subjects = uniqueCodes.map((code: string) => ({ code, name: code, resource_type: 'resources' }))
-          console.log(`[DEBUG] Subjects API - Returning ${subjects.length} subjects from resources fallback`) 
+          console.log(`[DEBUG] Subjects API - Returning ${subjects.length} subjects from resources fallback`)
           return { subjects }
         } catch (e) {
           console.warn('[DEBUG] Subjects API - resources fallback unexpected error', e)
@@ -124,17 +133,17 @@ export async function GET(request: Request) {
         .from('subjects')
         .select('id, code, name, resource_type')
         .in('id', subjectIds)
-      
+
       // Apply resource_type filter if specified
       if (resourceType && (resourceType === 'resources' || resourceType === 'records')) {
         subjectsQuery = subjectsQuery.eq('resource_type', resourceType)
       }
-      
+
       const { data: subjectsData, error: subjectsError } = await subjectsQuery
 
       if (subjectsError) {
         console.error(`[ERROR] Subjects API - Failed to fetch subjects:`, subjectsError)
-        return { 
+        return {
           error: 'Database error occurred while fetching subjects',
           details: subjectsError.message,
           status: 500
@@ -151,7 +160,7 @@ export async function GET(request: Request) {
           name: subject.name,
           resource_type: subject.resource_type
         }))
-      
+
       console.log(`[DEBUG] Subjects API - Returning ${subjects.length} subjects from offerings (filtered by resource_type: ${resourceType}):`, subjects)
       return { subjects }
     })

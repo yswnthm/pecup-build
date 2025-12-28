@@ -35,19 +35,23 @@ export default function ResourcesFiltersClient({ category, categoryData, context
   let year: string | number | null | undefined = searchParams.get('year')
   let branch: string | null | undefined = searchParams.get('branch')
   let semester: string | number | null | undefined = searchParams.get('semester')
+  let regulation: string | null | undefined = searchParams.get('regulation')
 
   if (context) {
     branch = context.branch
+    regulation = context.regulation
     // naive parsing of yearSem "31" -> year 3, sem 1
     if (context.yearSem.length === 2) {
-        year = context.yearSem.charAt(0)
-        semester = context.yearSem.charAt(1)
+      year = context.yearSem.charAt(0)
+      semester = context.yearSem.charAt(1)
     }
   } else if (!year && !branch && profile) {
     // Fallback to profile if no explicit params
     year = profile.year
     branch = profile.branch
     semester = profile.semester
+    // Note: profile might not have regulation explicitly if not updated in type, 
+    // but usually URL context is main driver now. 
   }
 
   const resourceType = getResourceTypeForCategory(category)
@@ -56,6 +60,7 @@ export default function ResourcesFiltersClient({ category, categoryData, context
     year,
     branch,
     semester,
+    regulation, // Pass regulation to hook
     resourceType: resourceType || undefined,
     enabled: !!year && !!branch && !!semester
   })
@@ -71,73 +76,73 @@ export default function ResourcesFiltersClient({ category, categoryData, context
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {!isLoading && filteredSubjects.map((s: ResourceSubject) => {
-        let href: string;
-        
-        if (context) {
-          // Use hierarchical URL if context is provided
-          href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`
-        } else {
-          // Fallback to legacy query params
-          const qp = new URLSearchParams()
-          // Use the resolved values for links to persist context
-          if (year) qp.set('year', String(year))
-          if (semester) qp.set('semester', String(semester))
-          if (branch) qp.set('branch', branch || '')
-          const q = qp.toString()
-          href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
-        }
+        {!isLoading && filteredSubjects.map((s: ResourceSubject) => {
+          let href: string;
 
-        return (
-          <Link key={s.code} href={href} className="block">
-            <Card className="h-full transition-all-smooth hover-lift">
+          if (context) {
+            // Use hierarchical URL if context is provided
+            href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`
+          } else {
+            // Fallback to legacy query params
+            const qp = new URLSearchParams()
+            // Use the resolved values for links to persist context
+            if (year) qp.set('year', String(year))
+            if (semester) qp.set('semester', String(semester))
+            if (branch) qp.set('branch', branch || '')
+            const q = qp.toString()
+            href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
+          }
+
+          return (
+            <Link key={s.code} href={href} className="block">
+              <Card className="h-full transition-all-smooth hover-lift">
+                <CardHeader>
+                  <CardTitle>{getSubjectDisplay(s, true)}</CardTitle>
+                  <CardDescription>Explore resources and tools for {categoryData.title.toUpperCase()}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex justify-end">
+                  <ChevronRight className="h-5 w-5 text-primary" />
+                </CardContent>
+              </Card>
+            </Link>
+          )
+        })}
+        {!isLoading && filteredSubjects.length === 0 && (
+          <div className="text-sm text-muted-foreground col-span-full text-center p-8">
+            No subjects found for {branch?.toUpperCase()} {year}-{semester}.
+          </div>
+        )}
+        {isLoading && (
+          <>
+            <Card className="h-full">
               <CardHeader>
-                <CardTitle>{getSubjectDisplay(s, true)}</CardTitle>
-                <CardDescription>Explore resources and tools for {categoryData.title.toUpperCase()}</CardDescription>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-40" />
               </CardHeader>
               <CardContent className="flex justify-end">
-                <ChevronRight className="h-5 w-5 text-primary" />
+                <Skeleton className="h-5 w-5" />
               </CardContent>
             </Card>
-          </Link>
-        )
-      })}
-      {!isLoading && filteredSubjects.length === 0 && (
-        <div className="text-sm text-muted-foreground col-span-full text-center p-8">
-            No subjects found for {branch?.toUpperCase()} {year}-{semester}.
-        </div>
-      )}
-      {isLoading && (
-        <>
-          <Card className="h-full">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-40" />
-            </CardHeader>
-            <CardContent className="flex justify-end">
-              <Skeleton className="h-5 w-5" />
-            </CardContent>
-          </Card>
-          <Card className="h-full">
-            <CardHeader>
-              <Skeleton className="h-6 w-28" />
-              <Skeleton className="h-4 w-36" />
-            </CardHeader>
-            <CardContent className="flex justify-end">
-              <Skeleton className="h-5 w-5" />
-            </CardContent>
-          </Card>
-          <Card className="h-full">
-            <CardHeader>
-              <Skeleton className="h-6 w-36" />
-              <Skeleton className="h-4 w-44" />
-            </CardHeader>
-            <CardContent className="flex justify-end">
-              <Skeleton className="h-5 w-5" />
-            </CardContent>
-          </Card>
-        </>
-      )}
+            <Card className="h-full">
+              <CardHeader>
+                <Skeleton className="h-6 w-28" />
+                <Skeleton className="h-4 w-36" />
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <Skeleton className="h-5 w-5" />
+              </CardContent>
+            </Card>
+            <Card className="h-full">
+              <CardHeader>
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-4 w-44" />
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <Skeleton className="h-5 w-5" />
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   )

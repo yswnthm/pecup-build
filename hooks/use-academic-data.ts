@@ -25,6 +25,7 @@ interface UseSubjectsParams {
   year?: string | number | null
   branch?: string | null
   semester?: string | number | null
+  regulation?: string | null
   resourceType?: string | null
   enabled?: boolean
 }
@@ -36,6 +37,7 @@ interface UseResourcesParams {
   year?: string | number | null
   branch?: string | null
   semester?: string | number | null
+  regulation?: string | null
   enabled?: boolean
 }
 
@@ -46,14 +48,15 @@ interface UseDynamicDataParams {
 }
 
 // Hook: useSubjects
-export function useSubjects({ year, branch, semester, resourceType, enabled = true }: UseSubjectsParams) {
+export function useSubjects({ year, branch, semester, regulation, resourceType, enabled = true }: UseSubjectsParams) {
   return useQuery({
-    queryKey: ['subjects', year, branch, semester, resourceType],
+    queryKey: ['subjects', year, branch, semester, regulation, resourceType],
     queryFn: async () => {
       const params = new URLSearchParams()
       if (year) params.append('year', String(year))
       if (branch) params.append('branch', branch)
       if (semester) params.append('semester', String(semester))
+      if (regulation) params.append('regulation', regulation)
       if (resourceType) params.append('resource_type', resourceType)
 
       const res = await fetch(`/api/subjects?${params.toString()}`)
@@ -68,9 +71,9 @@ export function useSubjects({ year, branch, semester, resourceType, enabled = tr
 }
 
 // Hook: useResources
-export function useResources({ category, subject, unit, year, branch, semester, enabled = true }: UseResourcesParams) {
+export function useResources({ category, subject, unit, year, branch, semester, regulation, enabled = true }: UseResourcesParams) {
   return useQuery({
-    queryKey: ['resources', category, subject, unit, year, branch, semester],
+    queryKey: ['resources', category, subject, unit, year, branch, semester, regulation],
     queryFn: async () => {
       const params = new URLSearchParams()
       if (category) params.append('category', category)
@@ -80,6 +83,7 @@ export function useResources({ category, subject, unit, year, branch, semester, 
       if (year) params.append('year', String(year))
       if (branch) params.append('branch', branch)
       if (semester) params.append('semester', String(semester))
+      if (regulation) params.append('regulation', regulation)
 
       const res = await fetch(`/api/resources?${params.toString()}`)
       if (!res.ok) {
@@ -115,7 +119,7 @@ export function useDynamicData({ branch, year, enabled = true }: UseDynamicDataP
       const params = new URLSearchParams()
       if (branch) params.append('branch', branch)
       if (year) params.append('year', String(year))
-      
+
       const res = await fetch(`/api/bulk-academic-data?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to fetch dynamic data')
       const data = await res.json()
