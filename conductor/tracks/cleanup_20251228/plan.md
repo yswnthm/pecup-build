@@ -24,7 +24,7 @@
 ## Phase 4: Performance & Optimization
 - [x] Task: Implement Code Splitting and Lazy Loading for heavy components/routes 079ccd6
 - [x] Task: Apply `memo`, `useMemo`, and `useCallback` to optimize React rendering in key areas 86e540f
-- [~] Task: Optimize TanStack Query configurations for better caching and request deduping
+- [x] Task: Optimize TanStack Query configurations for better caching and request deduping 40d9d80
 - [ ] Task: Verify performance improvements via manual profiling and build logs
 - [ ] Task: Conductor - User Manual Verification 'Performance & Optimization' (Protocol in workflow.md)
 
