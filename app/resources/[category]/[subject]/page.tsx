@@ -55,14 +55,7 @@ export default function SubjectPage({
     decodedSubject = ''
   }
 
-  // --- Data Fetching ---
 
-  // 1. Dynamic Data (User Count)
-  const { data: dynamicData } = useDynamicData({
-    branch: profile?.branch,
-    year: profile?.year
-  })
-  const usersCount = dynamicData?.usersCount || 0
 
   // 2. Subjects (For Display Name)
   const resourceType = getResourceTypeForCategory(category)
@@ -76,11 +69,11 @@ export default function SubjectPage({
   const subjects = subjectsData?.subjects || []
 
   // 3. Resources
-  const { 
-    data: resourcesData, 
-    isLoading: loading, 
-    error: resourcesError, 
-    refetch 
+  const {
+    data: resourcesData,
+    isLoading: loading,
+    error: resourcesError,
+    refetch
   } = useResources({
     category,
     subject: decodedSubject,
@@ -89,7 +82,7 @@ export default function SubjectPage({
     semester,
     enabled: !!decodedSubject
   })
-  
+
   const resources = resourcesData || []
   const error = resourcesError ? (resourcesError as Error).message : null
 
@@ -105,7 +98,7 @@ export default function SubjectPage({
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'student':
-        return <Badge variant="secondary">Student</Badge>
+        return null
       case 'representative':
         return <Badge variant="default">Representative</Badge>
       case 'admin':
@@ -185,7 +178,7 @@ export default function SubjectPage({
   useEffect(() => {
     if (selectedUnit !== 'all') {
       setExpandAll(false)
-      setExpandedUnits(new Set()) 
+      setExpandedUnits(new Set())
       return
     }
     if (expandAll) {
@@ -249,15 +242,6 @@ export default function SubjectPage({
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
-              <Users className="h-3 w-3 text-primary" />
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-sm">
-                  {usersCount.toLocaleString()}
-                </span>
-                <span className="text-xs text-muted-foreground">users</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

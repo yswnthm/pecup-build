@@ -20,19 +20,12 @@ export default function ContextCategoryPage({ params }: {
   const unwrappedParams = use(params)
   const { regulation, branch, yearSem, category } = unwrappedParams
 
-  const [usersCount, setUsersCount] = useState<number>(0)
-  const { dynamicData } = useProfile()
 
-  useEffect(() => {
-    if (dynamicData?.usersCount) {
-      setUsersCount(dynamicData.usersCount)
-    }
-  }, [dynamicData?.usersCount])
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'student':
-        return <Badge variant="secondary">Student</Badge>
+        return null
       case 'representative':
         return <Badge variant="default">Representative</Badge>
       case 'admin':
@@ -63,15 +56,6 @@ export default function ContextCategoryPage({ params }: {
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
-              <Users className="h-3 w-3 text-primary" />
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-sm">
-                  {usersCount.toLocaleString()}
-                </span>
-                <span className="text-xs text-muted-foreground">users</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -84,8 +68,8 @@ export default function ContextCategoryPage({ params }: {
           <p className="text-muted-foreground text-center">{categoryDescription}</p>
         </div>
 
-        <ResourcesFiltersClient 
-          category={category} 
+        <ResourcesFiltersClient
+          category={category}
           categoryData={{ title: categoryTitle, description: categoryDescription }}
           context={{
             regulation,

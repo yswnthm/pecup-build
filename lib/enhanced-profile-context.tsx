@@ -19,7 +19,6 @@ export interface EnhancedProfileDynamicData {
 	recentUpdates?: Array<{ id: string; title?: string; created_at?: string }>
 	upcomingExams?: Array<{ subject: string; exam_date: string; branch: string; year: string }>
 	resourcesCount?: number
-	usersCount?: number
 	lastSyncedAt?: string
 	[key: string]: unknown
 }
@@ -217,19 +216,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 	const fetchDynamicInfo = async (p: Profile) => {
 		try {
-			// Fetch users count (global) and recent updates in parallel
-			const [usersRes, updatesRes] = await Promise.all([
-				fetch('/api/users-count'),
-				fetch(`/api/recent-updates?${new URLSearchParams({
-					branch: p.branch!,
-					year: String(p.year)
-				}).toString()}`)
-			])
-
-			if (usersRes.ok) {
-				const d = await usersRes.json()
-				setDynamicData(prev => ({ ...prev, usersCount: d.totalUsers }))
-			}
+			// Fetch recent updates
+			const updatesRes = await fetch(`/api/recent-updates?${new URLSearchParams({
+				branch: p.branch!,
+				year: String(p.year)
+			}).toString()}`)
 
 			if (updatesRes.ok) {
 				const d = await updatesRes.json()

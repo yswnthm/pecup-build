@@ -41,7 +41,7 @@ type Exam = {
     year: string
 }
 
-const SHOW_ACTUAL_USER_COUNT = true;
+
 
 export function DashboardClient() {
     const { profile } = useProfile()
@@ -79,7 +79,7 @@ export function DashboardClient() {
     const getRoleDisplay = useCallback((role: string) => {
         switch (role) {
             case 'student':
-                return <Badge variant="secondary">Student</Badge>
+                return null
             case 'representative':
                 return <Badge variant="default">Representative</Badge>
             case 'admin':
@@ -164,7 +164,7 @@ export function DashboardClient() {
         return [{ label: "♡", isCurrentPage: true }];
     }, [profile]);
 
-    const usersCount = dynamicData?.usersCount || 0
+
     const updates = dynamicData?.recentUpdates || []
 
     return (
@@ -184,15 +184,6 @@ export function DashboardClient() {
                     </div>
                     <div className="flex items-center gap-4">
                         {profile?.role && getRoleDisplay(profile.role)}
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
-                            <Users className="h-3 w-3 text-primary" />
-                            <div className="flex items-center gap-1">
-                                <span className="font-medium text-sm">
-                                    {SHOW_ACTUAL_USER_COUNT ? usersCount.toLocaleString() : "300+"}
-                                </span>
-                                <span className="text-xs text-muted-foreground">users</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

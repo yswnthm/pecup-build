@@ -18,20 +18,13 @@ export default function CategoryPage({ params, searchParams }: {
 }) {
   const { profile } = useProfile()
   const unwrappedParams = use(params)
-  
-  // Use React Query for dynamic data (user count)
-  // We don't strictly need branch/year for global user count, but passing them doesn't hurt if we want localized data later
-  const { data: dynamicData } = useDynamicData({
-    branch: profile?.branch,
-    year: profile?.year
-  })
 
-  const usersCount = dynamicData?.usersCount || 0
+
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'student':
-        return <Badge variant="secondary">Student</Badge>
+        return null
       case 'representative':
         return <Badge variant="default">Representative</Badge>
       case 'admin':
@@ -67,15 +60,6 @@ export default function CategoryPage({ params, searchParams }: {
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
-              <Users className="h-3 w-3 text-primary" />
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-sm">
-                  {usersCount.toLocaleString()}
-                </span>
-                <span className="text-xs text-muted-foreground">users</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -88,9 +72,9 @@ export default function CategoryPage({ params, searchParams }: {
           <p className="text-muted-foreground text-center">{categoryDescription}</p>
         </div>
 
-        <ResourcesFiltersClient 
-          category={category} 
-          categoryData={{ title: categoryTitle, description: categoryDescription }} 
+        <ResourcesFiltersClient
+          category={category}
+          categoryData={{ title: categoryTitle, description: categoryDescription }}
         />
 
       </div>

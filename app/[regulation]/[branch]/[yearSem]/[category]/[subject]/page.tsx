@@ -88,24 +88,18 @@ export default function ContextSubjectPage({
 }) {
   const unwrappedParams = use(params)
   const { regulation, branch, yearSem, category, subject: rawSubject } = unwrappedParams
-  
+
   // Parse context from URL
   const contextYear = parseInt(yearSem[0], 10)
   const contextSemester = parseInt(yearSem[1] || yearSem[2], 10) // Handle '31' or '3-1' if needed, but '31' is standard in URL
 
   const { subjects, profile, resources: bulkResources, dynamicData, forceRefresh } = useProfile()
-  const [usersCount, setUsersCount] = useState<number>(0)
 
-  useEffect(() => {
-    if (dynamicData?.usersCount) {
-      setUsersCount(dynamicData.usersCount)
-    }
-  }, [dynamicData?.usersCount])
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'student':
-        return <Badge variant="secondary">Student</Badge>
+        return null
       case 'representative':
         return <Badge variant="default">Representative</Badge>
       case 'admin':
@@ -135,7 +129,7 @@ export default function ContextSubjectPage({
 
   // Resolve Subject Code (Handle Case Insensitivity)
   const decodedRawSubject = decodeURIComponent(rawSubject)
-  
+
   const resolvedSubjectCode = useMemo(() => {
     if (!subjects || subjects.length === 0) return decodedRawSubject.toUpperCase() // Fallback
     const match = subjects.find(s => s.code.toLowerCase() === decodedRawSubject.toLowerCase())
@@ -302,7 +296,7 @@ export default function ContextSubjectPage({
         const data = await response.json()
         const apiResources = Array.isArray(data) ? data : []
         const transformedResources = apiResources.map(transformResourceDTOToResource)
-        
+
         setResources(transformedResources)
         ResourcesCache.set(category, resolvedSubjectCode, transformedResources, qpYear, qpSem, qpBranch)
       } catch (err: any) {
@@ -343,15 +337,6 @@ export default function ContextSubjectPage({
           </div>
           <div className="flex items-center gap-4">
             {profile?.role && getRoleDisplay(profile.role)}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
-              <Users className="h-3 w-3 text-primary" />
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-sm">
-                  {usersCount.toLocaleString()}
-                </span>
-                <span className="text-xs text-muted-foreground">users</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -384,7 +369,7 @@ export default function ContextSubjectPage({
           {!loading && (
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               {/* Filters UI - Identical to previous implementation */}
-               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2">
                   <Select value={selectedUnit} onValueChange={(v) => setSelectedUnit(v)}>
                     <SelectTrigger className="w-[180px]">
