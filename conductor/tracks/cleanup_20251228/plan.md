@@ -15,7 +15,7 @@
 
 ## Phase 3: Standardization & Refactoring
 - [x] Task: Centralize UI components (consolidate fragmented components into `components/ui/`) 412727f
-- [~] Task: Refactor API routes to use a standardized response/error structure
+- [x] Task: Refactor API routes to use a standardized response/error structure e0872e5
 - [ ] Task: Refactor data fetching hooks for consistent patterns
 - [ ] Task: Extract hardcoded strings and magic numbers into `lib/constants.ts` or config files
 - [ ] Task: Update/Write tests for standardized components and hooks
