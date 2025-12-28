@@ -1,6 +1,7 @@
 // app/api/recent-updates/route.ts
 import { NextResponse } from 'next/server';
 import { createSupabaseAdmin } from '@/lib/supabase';
+import { apiError } from '@/lib/api-utils';
 
 export const runtime = 'nodejs';
 
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     const updatesRes = await query
     if (updatesRes.error) {
       console.error('API Error: Supabase query failed:', updatesRes.error)
-      return NextResponse.json({ error: 'Failed to load recent updates from database' }, { status: 500 })
+      return apiError('Failed to load recent updates from database', 500)
     }
     const updates = updatesRes.data
 
@@ -80,6 +81,6 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error("API Error during Supabase query:", error);
-    return NextResponse.json({ error: "Failed to fetch recent updates from database." }, { status: 500 });
+    return apiError("Failed to fetch recent updates from database.", 500);
   }
 }

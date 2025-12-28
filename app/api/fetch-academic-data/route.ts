@@ -2,19 +2,9 @@ import { NextResponse, NextRequest } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase'
 import { AcademicConfigManager } from '@/lib/academic-config'
 import { getOrSetCache } from '@/lib/redis'
+import { apiError } from '@/lib/api-utils'
 
 export const runtime = 'nodejs'
-
-function errorResponse(code: string, message: string, status: number) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: { code, message },
-      meta: { timestamp: Date.now(), path: '/api/fetch-academic-data' }
-    },
-    { status }
-  )
-}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -149,6 +139,6 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Bulk fetch error:', error)
     const message = typeof error?.message === 'string' ? error.message : 'Failed to fetch data'
-    return errorResponse('INTERNAL_ERROR', message, 500)
+    return apiError(message, 500, 'INTERNAL_ERROR')
   }
 }

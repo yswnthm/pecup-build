@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { createSupabaseAdmin } from '@/lib/supabase'
 import { getOrSetCache } from '@/lib/redis'
+import { apiError } from '@/lib/api-utils'
 
 export const runtime = 'nodejs'
 
@@ -148,12 +149,12 @@ export async function GET(request: Request) {
     })
 
     if (data.error) {
-      return NextResponse.json({ error: data.error, details: data.details }, { status: data.status || 500 })
+      return apiError(data.error, data.status || 500, undefined, data.details)
     }
 
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 })
+    return apiError('Unexpected server error', 500)
   }
 }
 

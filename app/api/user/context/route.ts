@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { apiSuccess, apiError } from '@/lib/api-utils'
 import { getCurrentUserContext, getUserPermissions } from '@/lib/auth-permissions'
 
 /**
@@ -10,17 +10,17 @@ export async function GET() {
     const userContext = await getCurrentUserContext()
     
     if (!userContext) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return apiError('Unauthorized', 401)
     }
 
     const permissions = await getUserPermissions(userContext)
 
-    return NextResponse.json({
+    return apiSuccess({
       userContext,
       permissions
     })
   } catch (error) {
     console.error('User context error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return apiError('Internal server error', 500)
   }
 }

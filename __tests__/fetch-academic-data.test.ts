@@ -176,7 +176,7 @@ describe('fetch-academic-data GET', () => {
     const res = await GET(req)
     expect(res.status).toBe(500)
     const body = await res.json()
-    expect(body.ok).toBe(false)
+    expect(body.success).toBe(false)
     expect(body.error?.code).toBe('INTERNAL_ERROR')
   })
 })

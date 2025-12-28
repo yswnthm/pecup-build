@@ -7,6 +7,7 @@ import { createSupabaseAdmin } from '@/lib/supabase';
 import { Resource, ResourceFilters } from '@/lib/types';
 import { academicConfig } from '@/lib/academic-config';
 import { getOrSetCache } from '@/lib/redis';
+import { apiError } from '@/lib/api-utils';
 
 export async function GET(request: Request) {
   console.log(`\nAPI Route: Received request at ${new Date().toISOString()}`);
@@ -259,14 +260,14 @@ export async function GET(request: Request) {
     });
 
     if (data && typeof data === 'object' && 'error' in data) {
-        return NextResponse.json(data, { status: (data as any).status || 500 });
+        return apiError((data as any).error, (data as any).status || 500);
     }
 
     return NextResponse.json(data as unknown as Resource[]);
 
   } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to load resources from database' }, { status: 500 });
+    return apiError('Failed to load resources from database', 500);
   }
 }
 
