@@ -17,7 +17,7 @@ if (missingPublicEnvVars.length > 0) {
 }
 
 // Create client with fallbacks if missing to prevent crash on module load
-export const supabase = createClient(
+const supabase = createClient(
   publicSupabaseUrl || 'https://example.com',
   publicSupabaseAnonKey || 'placeholder-key'
 );
@@ -90,11 +90,4 @@ export function getSupabaseAdmin(): SupabaseClient {
 // Legacy function for backward compatibility - now uses singleton
 export function createSupabaseAdmin(): SupabaseClient {
   return getSupabaseAdmin();
-}
-
-/**
- * Reset the admin client instance (useful for testing or connection issues)
- */
-export function resetSupabaseAdmin(): void {
-  supabaseAdminInstance = null;
 }

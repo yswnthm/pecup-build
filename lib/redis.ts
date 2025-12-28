@@ -24,7 +24,7 @@ const getRedisClient = () => {
   return null
 }
 
-export const redis = getRedisClient()
+const redis = getRedisClient()
 
 export async function getOrSetCache<T>(
   key: string,

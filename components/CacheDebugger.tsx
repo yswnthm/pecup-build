@@ -14,7 +14,7 @@ type CacheStatus = {
   resourcesCache: { present: boolean; storage: string; count?: number }
 }
 
-export function CacheDebugger() {
+function CacheDebugger() {
   const isDev = process.env.NODE_ENV === 'development'
   const { profile, resources: bulkResources } = useProfile()
   const [open, setOpen] = useState(false)

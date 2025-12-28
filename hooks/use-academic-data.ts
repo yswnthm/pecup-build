@@ -97,7 +97,7 @@ export function useResources({ category, subject, unit, year, branch, semester, 
 }
 
 // Hook: useStaticData
-export function useStaticData() {
+function useStaticData() {
   return useQuery({
     queryKey: ['static-data'],
     queryFn: async () => {
