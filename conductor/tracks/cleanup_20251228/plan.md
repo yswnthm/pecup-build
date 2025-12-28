@@ -13,7 +13,7 @@
 - [x] Task: Run existing test suite to ensure no regressions after removal 2e4f745
 - [x] Task: Conductor - User Manual Verification 'Dead Code Elimination' (Protocol in workflow.md) 4a8492f
 
-## Phase 3: Standardization & Refactoring
+## Phase 3: Standardization & Refactoring [checkpoint: 8c0bf55]
 - [x] Task: Centralize UI components (consolidate fragmented components into `components/ui/`) 412727f
 - [x] Task: Refactor API routes to use a standardized response/error structure e0872e5
 - [x] Task: Refactor data fetching hooks for consistent patterns 89093be
