@@ -1,12 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mocks
-vi.mock('@/app/api/auth/[...nextauth]/route', () => ({
-  authOptions: {},
-}))
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(),
-}))
+
 
 vi.mock('@/lib/supabase', () => ({
   createSupabaseAdmin: vi.fn(),

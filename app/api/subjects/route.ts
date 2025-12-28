@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+
 import { createSupabaseAdmin } from '@/lib/supabase'
 import { getOrSetCache } from '@/lib/redis'
 
@@ -34,23 +33,6 @@ export async function GET(request: Request) {
 
       // Infer from profile ONLY if not provided in URL
       if (!year || !branch || !semester) {
-        const session = await getServerSession(authOptions)
-        const email = session?.user?.email?.toLowerCase()
-        console.log(`[DEBUG] User email: ${email}`)
-
-        if (email) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('year,branch')
-            .eq('email', email)
-            .maybeSingle()
-          console.log(`[DEBUG] User profile:`, profile)
-
-          if (profile) {
-            year = year || String(profile.year)
-            branch = branch || (profile.branch ? String(profile.branch).toUpperCase() : null)
-          }
-        }
         if (!semester) {
           // Default to Semester 1 when not specified
           semester = '1'
