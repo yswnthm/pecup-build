@@ -102,7 +102,7 @@ export function useStaticData() {
     queryKey: ['static-data'],
     queryFn: async () => {
       // leveraging the bulk endpoint for now as it caches static data effectively on server
-      const res = await fetch('/api/bulk-academic-data')
+      const res = await fetch('/api/fetch-academic-data')
       if (!res.ok) throw new Error('Failed to fetch static data')
       const data = await res.json()
       return data.static as StaticDataResponse
@@ -120,7 +120,7 @@ export function useDynamicData({ branch, year, enabled = true }: UseDynamicDataP
       if (branch) params.append('branch', branch)
       if (year) params.append('year', String(year))
 
-      const res = await fetch(`/api/bulk-academic-data?${params.toString()}`)
+      const res = await fetch(`/api/fetch-academic-data?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to fetch dynamic data')
       const data = await res.json()
       return data.dynamic as DynamicDataResponse

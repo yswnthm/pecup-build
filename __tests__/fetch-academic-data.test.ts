@@ -116,7 +116,7 @@ function makeSupabaseMock() {
   return supabase
 }
 
-describe('bulk-academic-data GET', () => {
+describe('fetch-academic-data GET', () => {
   let getServerSession: any
   let createSupabaseAdmin: any
 
@@ -131,10 +131,10 @@ describe('bulk-academic-data GET', () => {
   })
 
   it('returns 200 and expected keys', async () => {
-    ;({ createSupabaseAdmin } = await import('@/lib/supabase'))
+    ; ({ createSupabaseAdmin } = await import('@/lib/supabase'))
     createSupabaseAdmin.mockReturnValue(makeSupabaseMock())
 
-    const { GET } = await import('@/app/api/bulk-academic-data/route')
+    const { GET } = await import('@/app/api/fetch-academic-data/route')
     const req = {
       nextUrl: {
         searchParams: new URLSearchParams({
@@ -149,13 +149,13 @@ describe('bulk-academic-data GET', () => {
     const body = await res.json()
     expect(body).toHaveProperty('profile')
     expect(body.profile).toBeNull()
-    expect(body).toHaveProperty('subjects')
+    expect(body).not.toHaveProperty('subjects')
     expect(body).toHaveProperty('static')
     expect(body).toHaveProperty('dynamic')
   })
 
   it('returns 200 even without session (stateless)', async () => {
-    const { GET } = await import('@/app/api/bulk-academic-data/route')
+    const { GET } = await import('@/app/api/fetch-academic-data/route')
     const req = {
       nextUrl: {
         searchParams: new URLSearchParams()
@@ -168,12 +168,12 @@ describe('bulk-academic-data GET', () => {
   })
 
   it('returns 500 when Supabase creation throws', async () => {
-    ;({ createSupabaseAdmin } = await import('@/lib/supabase'))
+    ; ({ createSupabaseAdmin } = await import('@/lib/supabase'))
     createSupabaseAdmin.mockImplementation(() => {
       throw new Error('boom')
     })
 
-    const { GET } = await import('@/app/api/bulk-academic-data/route')
+    const { GET } = await import('@/app/api/fetch-academic-data/route')
     const req = {
       nextUrl: {
         searchParams: new URLSearchParams()
