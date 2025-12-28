@@ -2,7 +2,7 @@
 
 ## Phase 1: Environment & Tooling Setup
 - [x] Task: Create a new cleanup branch `cleanup/codebase-optimization` 6f15dfb
-- [ ] Task: Install and configure `knip` using `bun`
+- [x] Task: Install and configure `knip` using `bun` 273a19f
 - [ ] Task: Establish a baseline bundle size report for comparison
 - [ ] Task: Conductor - User Manual Verification 'Environment & Tooling Setup' (Protocol in workflow.md)
 
