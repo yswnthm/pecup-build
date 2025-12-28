@@ -21,7 +21,7 @@
 - [x] Task: Update/Write tests for standardized components and hooks cb471cd
 - [x] Task: Conductor - User Manual Verification 'Standardization & Refactoring' (Protocol in workflow.md) fcff7b3
 
-## Phase 4: Performance & Optimization
+## Phase 4: Performance & Optimization [checkpoint: fc57abe]
 - [x] Task: Implement Code Splitting and Lazy Loading for heavy components/routes 079ccd6
 - [x] Task: Apply `memo`, `useMemo`, and `useCallback` to optimize React rendering in key areas 86e540f
 - [x] Task: Optimize TanStack Query configurations for better caching and request deduping 40d9d80
