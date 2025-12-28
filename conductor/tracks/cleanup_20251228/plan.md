@@ -1,0 +1,35 @@
+# Plan: Codebase Cleanup and Optimization
+
+## Phase 1: Environment & Tooling Setup
+- [x] Task: Create a new cleanup branch `cleanup/codebase-optimization` 6f15dfb
+- [ ] Task: Install and configure `knip` using `bun`
+- [ ] Task: Establish a baseline bundle size report for comparison
+- [ ] Task: Conductor - User Manual Verification 'Environment & Tooling Setup' (Protocol in workflow.md)
+
+## Phase 2: Dead Code Elimination
+- [ ] Task: Execute `knip` to identify unused files and remove them
+- [ ] Task: Identify and remove unused dependencies from `package.json`
+- [ ] Task: Prune unused exports and variables identified by `knip`
+- [ ] Task: Run existing test suite to ensure no regressions after removal
+- [ ] Task: Conductor - User Manual Verification 'Dead Code Elimination' (Protocol in workflow.md)
+
+## Phase 3: Standardization & Refactoring
+- [ ] Task: Centralize UI components (consolidate fragmented components into `components/ui/`)
+- [ ] Task: Refactor API routes to use a standardized response/error structure
+- [ ] Task: Refactor data fetching hooks for consistent patterns
+- [ ] Task: Extract hardcoded strings and magic numbers into `lib/constants.ts` or config files
+- [ ] Task: Update/Write tests for standardized components and hooks
+- [ ] Task: Conductor - User Manual Verification 'Standardization & Refactoring' (Protocol in workflow.md)
+
+## Phase 4: Performance & Optimization
+- [ ] Task: Implement Code Splitting and Lazy Loading for heavy components/routes
+- [ ] Task: Apply `memo`, `useMemo`, and `useCallback` to optimize React rendering in key areas
+- [ ] Task: Optimize TanStack Query configurations for better caching and request deduping
+- [ ] Task: Verify performance improvements via manual profiling and build logs
+- [ ] Task: Conductor - User Manual Verification 'Performance & Optimization' (Protocol in workflow.md)
+
+## Phase 5: Final Quality Gate & Verification
+- [ ] Task: Run full test suite with coverage report (>80% target)
+- [ ] Task: Execute final linting and type checking (`tsc`, `eslint`)
+- [ ] Task: Compare final bundle size with baseline
+- [ ] Task: Conductor - User Manual Verification 'Final Quality Gate & Verification' (Protocol in workflow.md)
