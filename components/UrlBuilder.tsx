@@ -11,6 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { ArrowRight } from "lucide-react"
+import { REGULATIONS, BRANCH_CODES } from "@/lib/constants"
 
 export function UrlBuilder() {
     const router = useRouter()
@@ -33,8 +34,8 @@ export function UrlBuilder() {
                     <SelectValue placeholder="Reg" />
                 </SelectTrigger>
                 <SelectContent>
-                    {["r23", "r20", "r16", "r10"].map((r) => (
-                        <SelectItem key={r} value={r} className="text-xs">
+                    {REGULATIONS.map((r) => (
+                        <SelectItem key={r} value={r.toLowerCase()} className="text-xs">
                             {r.toUpperCase()}
                         </SelectItem>
                     ))}
@@ -48,8 +49,8 @@ export function UrlBuilder() {
                     <SelectValue placeholder="Branch" />
                 </SelectTrigger>
                 <SelectContent>
-                    {["cse", "aiml", "ai", "ds", "ce", "mec", "ece", "it", "cs"].map((b) => (
-                        <SelectItem key={b} value={b} className="text-xs">
+                    {BRANCH_CODES.map((b) => (
+                        <SelectItem key={b} value={b.toLowerCase()} className="text-xs">
                             {b.toUpperCase()}
                         </SelectItem>
                     ))}

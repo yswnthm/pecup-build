@@ -11,25 +11,7 @@ import { notFound } from 'next/navigation'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 import ResourcesFiltersClient from '@/app/resources/[category]/ResourcesFiltersClient'
-
-const resourceData = {
-  notes: {
-    title: "Notes",
-    description: "Lecture notes and study materials",
-  },
-  assignments: {
-    title: "Assignments",
-    description: "Assignment questions all batches",
-  },
-  papers: {
-    title: "Papers",
-    description: "Mid-1, Mid-2, Previous year papers",
-  },
-  records: {
-    title: "Records",
-    description: "Records and manuals for specific weeks",
-  },
-} as const
+import { CATEGORY_TITLES, CATEGORY_DESCRIPTIONS } from '@/lib/constants'
 
 export default function ContextCategoryPage({ params }: {
   params: Promise<{ regulation: string; branch: string; yearSem: string; category: string }>
@@ -62,10 +44,11 @@ export default function ContextCategoryPage({ params }: {
     }
   }
 
-  if (!resourceData[category as keyof typeof resourceData]) {
+  if (!CATEGORY_TITLES[category as keyof typeof CATEGORY_TITLES]) {
     notFound()
   }
-  const categoryData = resourceData[category as keyof typeof resourceData]
+  const categoryTitle = CATEGORY_TITLES[category as keyof typeof CATEGORY_TITLES];
+  const categoryDescription = CATEGORY_DESCRIPTIONS[category as keyof typeof CATEGORY_DESCRIPTIONS];
 
   const breadcrumbs = generateBreadcrumbs(regulation, branch, yearSem, category)
 
@@ -96,14 +79,14 @@ export default function ContextCategoryPage({ params }: {
       <div className="space-y-6">
         <div className="space-y-2">
           <div className="flex items-start justify-center">
-            <h1 className="text-3xl font-bold tracking-tight text-center">{categoryData.title}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-center">{categoryTitle}</h1>
           </div>
-          <p className="text-muted-foreground text-center">{categoryData.description}</p>
+          <p className="text-muted-foreground text-center">{categoryDescription}</p>
         </div>
 
         <ResourcesFiltersClient 
           category={category} 
-          categoryData={categoryData}
+          categoryData={{ title: categoryTitle, description: categoryDescription }}
           context={{
             regulation,
             branch,

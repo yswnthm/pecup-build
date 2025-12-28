@@ -19,6 +19,7 @@ import Hero from '@/components/Hero'
 
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { useDynamicData } from '@/hooks/use-academic-data'
+import { CATEGORY_TITLES, CATEGORY_DESCRIPTIONS } from '@/lib/constants'
 
 // Types
 type Exam = {
@@ -43,7 +44,7 @@ export function DashboardClient() {
     // Construct query params for resource links or context-based paths
     const getCategoryPath = (basePath: string) => {
         if (profile?.branch && profile?.year && profile?.semester) {
-            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
+            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\\d+)\\//i) : null;
             const regulation = match ? match[1] : 'r23';
 
             if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
@@ -105,8 +106,8 @@ export function DashboardClient() {
 
     const categories = [
         {
-            name: "Notes",
-            description: "Lecture notes and study materials",
+            name: CATEGORY_TITLES.notes,
+            description: CATEGORY_DESCRIPTIONS.notes,
             icon: FileText,
             path: "/resources/notes",
             categoryKey: "notes",
@@ -114,8 +115,8 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Assignments",
-            description: "Assignment questions all batches",
+            name: CATEGORY_TITLES.assignments,
+            description: CATEGORY_DESCRIPTIONS.assignments,
             icon: BookOpen,
             path: "/resources/assignments",
             categoryKey: "assignments",
@@ -123,8 +124,8 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Papers",
-            description: "mid-1, mid-2, previous year papers",
+            name: CATEGORY_TITLES.papers,
+            description: CATEGORY_DESCRIPTIONS.papers,
             icon: FileCheck,
             path: "/resources/papers",
             categoryKey: "papers",
@@ -132,8 +133,8 @@ export function DashboardClient() {
             iconColor: "text-primary",
         },
         {
-            name: "Records",
-            description: "records and manuals for specific weeks",
+            name: CATEGORY_TITLES.records,
+            description: CATEGORY_DESCRIPTIONS.records,
             icon: Database,
             path: "/resources/records",
             categoryKey: "records",

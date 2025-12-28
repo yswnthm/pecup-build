@@ -3,6 +3,7 @@ import { createSupabaseAdmin } from '@/lib/supabase'
 import { AcademicConfigManager } from '@/lib/academic-config'
 import { getOrSetCache } from '@/lib/redis'
 import { apiError } from '@/lib/api-utils'
+import { CACHE_TTL } from '@/lib/constants'
 
 export const runtime = 'nodejs'
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     // Static data
     const staticPromise = (async () => {
       const secStart = Date.now()
-      const res = await getOrSetCache('static:data', 86400, async () => { // 24 hours
+      const res = await getOrSetCache('static:data', CACHE_TTL.STATIC_DATA, async () => { // 24 hours
         return await Promise.all([
           supabase.from('branches').select('*'),
           supabase.from('years').select('*'),
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       const secStart = Date.now()
       const cacheKey = `dynamic:${branchCode || 'all'}:${currentYear || 'all'}`
 
-      const result = await getOrSetCache(cacheKey, 300, async () => { // 5 minutes
+      const result = await getOrSetCache(cacheKey, CACHE_TTL.DYNAMIC_DATA, async () => { // 5 minutes
         // Dates for exams window
         const start = new Date()
         start.setUTCHours(0, 0, 0, 0)
