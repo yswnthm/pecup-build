@@ -14,8 +14,20 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Header } from '@/components/Header'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/components/ui/skeleton'
 
-import Hero from '@/components/Hero'
+const Hero = dynamic(() => import('@/components/Hero'), {
+    loading: () => <Skeleton className="h-[200px] w-full" />,
+})
+
+const UpcomingExams = dynamic(() => import('@/components/UpcomingExams'), {
+    ssr: false,
+})
+
+const RecentUpdates = dynamic(() => import('@/components/RecentUpdates'), {
+    ssr: false,
+})
 
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { useDynamicData } from '@/hooks/use-academic-data'
@@ -264,68 +276,10 @@ export function DashboardClient() {
             )}
 
             {/* Upcoming Exams (from dynamicData) */}
-            {dynamicData?.upcomingExams && dynamicData.upcomingExams.length > 0 && (
-                <div className="mt-8">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <CalendarDays className="h-5 w-5 text-primary" />
-                                <CardTitle>Upcoming Exams (next 5 days)</CardTitle>
-                            </div>
-                            <CardDescription>Based on your branch and year</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {dynamicData.upcomingExams.map((exam: Exam, idx: number) => (
-                                    <div key={`${exam.subject}-${exam.exam_date}-${idx}`} className="flex items-center justify-between border-l-4 border-primary pl-4">
-                                        <div>
-                                            <h3 className="font-medium">{exam.subject}</h3>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                <Clock className="h-3 w-3" /> {exam.exam_date && !isNaN(new Date(exam.exam_date).getTime()) ? new Date(exam.exam_date).toDateString() : "Date unavailable"}
-                                            </p>
-                                        </div>
-                                        <Badge variant="outline">{exam.branch} • {exam.year}</Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+            <UpcomingExams exams={dynamicData?.upcomingExams || []} />
 
             {/* Recent Updates */}
-            <div className="mt-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Updates</CardTitle>
-                        <CardDescription>Latest changes to the resource hub</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {dynamicLoading && (
-                            <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                                <span className="ml-2 text-muted-foreground">Loading updates...</span>
-                            </div>
-                        )}
-                        {!dynamicLoading && updates.length > 0 && (
-                            <div className="space-y-4">
-                                {updates.map((update: any) => (
-                                    <div key={update.id} className="border-l-4 border-primary pl-4 transition-colors hover:bg-muted/50 py-1">
-                                        <h3 className="font-medium">
-                                            {update.title}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground">{update.date}</p>
-                                        {update.description && <p className="text-sm text-muted-foreground mt-1">{update.description}</p>}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {!dynamicLoading && updates.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-4">No recent updates found.</p>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+            <RecentUpdates updates={updates} isLoading={dynamicLoading} />
 
 
         </motion.div>

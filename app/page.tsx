@@ -1,4 +1,9 @@
-import { UrlBuilder } from "@/components/UrlBuilder"
+import dynamic from 'next/dynamic'
+import { Skeleton } from "@/components/ui/skeleton"
+
+const UrlBuilder = dynamic(() => import("@/components/UrlBuilder").then(mod => mod.UrlBuilder), {
+  loading: () => <Skeleton className="h-10 w-full max-w-xl mx-auto" />,
+})
 
 export default function Index() {
   return (

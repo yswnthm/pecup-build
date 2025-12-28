@@ -22,7 +22,7 @@
 - [x] Task: Conductor - User Manual Verification 'Standardization & Refactoring' (Protocol in workflow.md) fcff7b3
 
 ## Phase 4: Performance & Optimization
-- [ ] Task: Implement Code Splitting and Lazy Loading for heavy components/routes
+- [~] Task: Implement Code Splitting and Lazy Loading for heavy components/routes
 - [ ] Task: Apply `memo`, `useMemo`, and `useCallback` to optimize React rendering in key areas
 - [ ] Task: Optimize TanStack Query configurations for better caching and request deduping
 - [ ] Task: Verify performance improvements via manual profiling and build logs
