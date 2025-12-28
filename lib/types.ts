@@ -82,7 +82,7 @@ export interface AcademicCalendar {
 }
 
 // Subject types
-export type ResourceType = 'resources' | 'records';
+export type ResourceType = 'resources';
 
 export interface Subject {
   id: string;

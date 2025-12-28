@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const branchRaw = url.searchParams.get('branch')
   let semester = url.searchParams.get('semester')
   const regulationRaw = url.searchParams.get('regulation')
-  const resourceType = url.searchParams.get('resource_type') // 'resources', 'records', or null for all
+  const resourceType = url.searchParams.get('resource_type') // 'resources' or null for all
 
   // Normalize inputs to match DB case (uppercase)
   let branch = branchRaw ? branchRaw.toUpperCase() : null
@@ -119,7 +119,7 @@ export async function GET(request: Request) {
         .in('id', subjectIds)
 
       // Apply resource_type filter if specified
-      if (resourceType && (resourceType === 'resources' || resourceType === 'records')) {
+      if (resourceType && resourceType === 'resources') {
         subjectsQuery = subjectsQuery.eq('resource_type', resourceType)
       }
 

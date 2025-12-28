@@ -8,14 +8,14 @@ export const CATEGORY_TITLES: Record<string, string> = {
   notes: 'Notes',
   assignments: 'Assignments',
   papers: 'Papers',
-  records: 'Records',
+
 };
 
 export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   notes: 'Lecture notes and study materials',
   assignments: 'Assignment questions all batches',
   papers: 'Mid-1, Mid-2, Previous year papers',
-  records: 'Records and manuals for specific weeks',
+
 };
 
 // Map old year numbers (1,2,3,4) to batch years based on current academic progression

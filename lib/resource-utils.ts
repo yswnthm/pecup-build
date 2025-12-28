@@ -2,15 +2,14 @@ import { ResourceType } from '@/lib/types'
 
 /**
  * Determines the resource_type filter based on the resource category
- * @param category - The resource category (notes, assignments, papers, records)
+ * @param category - The resource category (notes, assignments, papers)
  * @returns The corresponding ResourceType or null for no filtering
  */
 export function getResourceTypeForCategory(category: string): ResourceType | null {
   switch (category.toLowerCase()) {
-    case 'records':
-      return 'records' // Lab/Laboratory subjects for weekly records
+
     case 'notes':
-    case 'assignments': 
+    case 'assignments':
     case 'papers':
       return 'resources' // Regular subjects for notes, assignments, papers
     default:
@@ -25,10 +24,9 @@ export function getResourceTypeForCategory(category: string): ResourceType | nul
  */
 export function getSubjectFilterDescription(category: string): string {
   const resourceType = getResourceTypeForCategory(category)
-  
+
   switch (resourceType) {
-    case 'records':
-      return 'Showing laboratory and workshop subjects for record submissions'
+
     case 'resources':
       return 'Showing theory subjects for notes, assignments, and papers'
     default:
@@ -44,21 +42,21 @@ export function getSubjectFilterDescription(category: string): string {
  */
 export function buildSubjectsQuery(searchParams: URLSearchParams, category: string): URLSearchParams {
   const qp = new URLSearchParams()
-  
+
   // Copy existing params
   const year = searchParams.get('year')
-  const semester = searchParams.get('semester')  
+  const semester = searchParams.get('semester')
   const branch = searchParams.get('branch')
-  
+
   if (year) qp.set('year', year)
   if (semester) qp.set('semester', semester)
   if (branch) qp.set('branch', branch)
-  
+
   // Add resource_type filter based on category
   const resourceType = getResourceTypeForCategory(category)
   if (resourceType) {
     qp.set('resource_type', resourceType)
   }
-  
+
   return qp
 }

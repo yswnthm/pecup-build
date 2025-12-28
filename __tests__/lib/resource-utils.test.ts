@@ -3,10 +3,7 @@ import { getResourceTypeForCategory, getSubjectFilterDescription, buildSubjectsQ
 
 describe('resource-utils', () => {
   describe('getResourceTypeForCategory', () => {
-    it('returns records for records category', () => {
-      expect(getResourceTypeForCategory('records')).toBe('records')
-      expect(getResourceTypeForCategory('RECORDS')).toBe('records')
-    })
+
 
     it('returns resources for notes, assignments, and papers', () => {
       expect(getResourceTypeForCategory('notes')).toBe('resources')
@@ -20,9 +17,7 @@ describe('resource-utils', () => {
   })
 
   describe('getSubjectFilterDescription', () => {
-    it('returns correct description for records', () => {
-      expect(getSubjectFilterDescription('records')).toContain('laboratory')
-    })
+
 
     it('returns correct description for resources', () => {
       expect(getSubjectFilterDescription('notes')).toContain('theory')

@@ -25,7 +25,7 @@ const CATEGORY_TITLES: Record<string, string> = {
   notes: 'Notes',
   assignments: 'Assignments',
   papers: 'Papers',
-  records: 'Records',
+
 }
 
 export default function SubjectPage({
