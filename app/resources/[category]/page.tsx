@@ -5,8 +5,9 @@ import { Header } from '@/components/Header'
 
 import { ChevronRight, Users, Loader2 } from "lucide-react"
 import { Badge } from '@/components/ui/badge'
-import { useEffect, useState, use } from 'react'
+import { use } from 'react'
 import { useProfile } from '@/lib/enhanced-profile-context'
+import { useDynamicData } from '@/hooks/use-academic-data'
 import { notFound } from 'next/navigation'
 import ResourcesFiltersClient from './ResourcesFiltersClient'
 
@@ -35,15 +36,15 @@ export default function CategoryPage({ params, searchParams }: {
 }) {
   const { profile } = useProfile()
   const unwrappedParams = use(params)
+  
+  // Use React Query for dynamic data (user count)
+  // We don't strictly need branch/year for global user count, but passing them doesn't hurt if we want localized data later
+  const { data: dynamicData } = useDynamicData({
+    branch: profile?.branch,
+    year: profile?.year
+  })
 
-  const [usersCount, setUsersCount] = useState<number>(0)
-  const { dynamicData } = useProfile()
-
-  useEffect(() => {
-    if (dynamicData?.usersCount) {
-      setUsersCount(dynamicData.usersCount)
-    }
-  }, [dynamicData?.usersCount])
+  const usersCount = dynamicData?.usersCount || 0
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -61,7 +62,7 @@ export default function CategoryPage({ params, searchParams }: {
   }
 
   const { category } = unwrappedParams
-  const resolvedSearchParams = searchParams
+  // const resolvedSearchParams = searchParams // unused
 
   if (!resourceData[category as keyof typeof resourceData]) {
     notFound()

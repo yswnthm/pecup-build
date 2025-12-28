@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Link from "next/link"
 import { motion } from 'framer-motion'
-import { FileText, BookOpen, FileCheck, Database, Users, Loader2, ExternalLink, CalendarDays, Clock, Edit, FileQuestion, AlertCircle } from "lucide-react"
+import { FileText, BookOpen, FileCheck, Database, Users, Loader2, CalendarDays, Clock, AlertCircle } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from '@/components/ui/badge'
@@ -15,9 +15,9 @@ import { Breadcrumb } from '@/components/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 
 import Hero from '@/components/Hero'
-import Loader from '@/components/Loader'
 
 import { useProfile } from '@/lib/enhanced-profile-context'
+import { useDynamicData } from '@/hooks/use-academic-data'
 
 // Types
 type Exam = {
@@ -27,60 +27,25 @@ type Exam = {
     year: string
 }
 
-interface RecentUpdate {
-    id: string | number
-    title: string
-    date: string
-    description?: string
-}
-
 const SHOW_ACTUAL_USER_COUNT = true;
 
 export function DashboardClient() {
-    const { profile, dynamicData, loading, error } = useProfile()
-
-    // State from Resources Page logic (for links)
-    const [year, setYear] = useState<number | 'all'>('all')
-    const [semester, setSemester] = useState<number | 'all'>('all')
-    const [branch, setBranch] = useState<string | ''>('')
-
-    // State from Home Page logic (for data)
-    const [usersCount, setUsersCount] = useState<number>(0)
-
-    const [updates, setUpdates] = useState<RecentUpdate[]>([])
-    const [isLoadingUpdates, setIsLoadingUpdates] = useState(true)
-    const [updatesError, setUpdatesError] = useState<string | null>(null)
-
-
+    const { profile } = useProfile()
+    
+    // Fetch dynamic data using React Query
+    const { data: dynamicData, isLoading: dynamicLoading, error: dynamicError } = useDynamicData({
+        branch: profile?.branch,
+        year: profile?.year,
+        enabled: !!profile?.branch // Only fetch if we have context, or fetch global if not? Actually global updates are good too.
+    })
 
     // Construct query params for resource links or context-based paths
     const getCategoryPath = (basePath: string) => {
-        // Check if we have a full context to use the clean URL format
-        // We need branch, year, semester, and a regulation (defaulting to r23 if not in URL, but safer to rely on context if available)
-        // Actually, Profile doesn't store regulation explicitly usually, but let's check if we are in a context-aware route.
-        // For now, let's assume if we have all parts we can construct it.
-        // HOWEVER, the profile object doesn't have regulation. 
-        // We can check the current pathname to see if it starts with /r...
-        // Or we can try to guess.
-        
-        // Better approach: If we are on a page that provided the context (public profile), use that.
-        // The URL pattern is usually /[regulation]/[branch]/[yearSem]
-        
-        // Let's rely on the profile. If it's a "public-user" (guest) from URL, we can reconstruct the path?
-        // Actually, let's just use the current window location if available, or pass it as prop?
-        // DashboardClient is used in app/[regulation]/[branch]/[yearSem]/page.tsx.
-        
         if (profile?.branch && profile?.year && profile?.semester) {
-             // Basic regex to check if current path is a context path
              const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\//i) : null;
-             const regulation = match ? match[1] : 'r23'; // Default to r23 if not found, or maybe fallback to query params?
-             
-             // Check if we are actually in a context route or just have a logged in user
-             // If logged in user at root /, we might want to stick to /resources/notes?params... or redirect to context?
-             // The requirement is specifically for the /r23/cse/11 URL to work.
+             const regulation = match ? match[1] : 'r23'; 
              
              if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
-                 // We are likely in a context route
                  const cleanCategory = basePath.replace('/resources/', '');
                  const yearSem = `${profile.year}${profile.semester}`;
                  return `/${regulation}/${profile.branch.toLowerCase()}/${yearSem}/${cleanCategory}`;
@@ -89,9 +54,9 @@ export function DashboardClient() {
 
         // Fallback to legacy query params
         const p = new URLSearchParams()
-        if (year !== 'all') p.set('year', String(year))
-        if (semester !== 'all') p.set('semester', String(semester))
-        if (branch) p.set('branch', branch)
+        if (profile?.year) p.set('year', String(profile.year))
+        if (profile?.semester) p.set('semester', String(profile.semester))
+        if (profile?.branch) p.set('branch', profile.branch)
         const s = p.toString()
         return `${basePath}${s ? `?${s}` : ''}`
     }
@@ -155,6 +120,9 @@ export function DashboardClient() {
         }
         return [{ label: "♡", isCurrentPage: true }];
     }, [profile]);
+
+    const usersCount = dynamicData?.usersCount || 0
+    const updates = dynamicData?.recentUpdates || []
 
     return (
         <motion.div
@@ -251,15 +219,11 @@ export function DashboardClient() {
             </Card>
 
 
-
-            {/* No Exams Message */}
-
-
-            {error && (
+            {dynamicError && (
                 <Alert variant="destructive" className="mt-8">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error loading data</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>Failed to load recent updates or exams.</AlertDescription>
                 </Alert>
             )}
 
@@ -301,22 +265,15 @@ export function DashboardClient() {
                         <CardDescription>Latest changes to the resource hub</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {isLoadingUpdates && (
+                        {dynamicLoading && (
                             <div className="flex items-center justify-center p-4">
                                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                                 <span className="ml-2 text-muted-foreground">Loading updates...</span>
                             </div>
                         )}
-                        {updatesError && !isLoadingUpdates && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Error Loading Updates</AlertTitle>
-                                <AlertDescription>{updatesError}</AlertDescription>
-                            </Alert>
-                        )}
-                        {!isLoadingUpdates && !updatesError && updates.length > 0 && (
+                        {!dynamicLoading && updates.length > 0 && (
                             <div className="space-y-4">
-                                {updates.map((update) => (
+                                {updates.map((update: any) => (
                                     <div key={update.id} className="border-l-4 border-primary pl-4 transition-colors hover:bg-muted/50 py-1">
                                         <h3 className="font-medium">
                                             {update.title}
@@ -327,7 +284,7 @@ export function DashboardClient() {
                                 ))}
                             </div>
                         )}
-                        {!isLoadingUpdates && !updatesError && updates.length === 0 && (
+                        {!dynamicLoading && updates.length === 0 && (
                             <p className="text-sm text-muted-foreground text-center py-4">No recent updates found.</p>
                         )}
                     </CardContent>
@@ -338,3 +295,4 @@ export function DashboardClient() {
         </motion.div>
     )
 }
+

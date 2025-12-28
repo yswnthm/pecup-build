@@ -1,7 +1,7 @@
 // app/resources/[category]/[subject]/page.tsx
 'use client'
 
-import { useState, useEffect, useMemo, useRef, use } from 'react'
+import { useState, useEffect, useMemo, use } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,62 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getResourceTypeForCategory } from '@/lib/resource-utils'
 import { useProfile, type Subject } from '@/lib/enhanced-profile-context'
 import { getSubjectDisplayByCode } from '@/lib/subject-display'
-import { ResourcesCache } from '@/lib/simple-cache'
 import { Resource } from '@/lib/types'
-
-// DTO type that matches the API response format (hybrid format with both legacy and canonical fields)
-interface ResourceDTO {
-  id: string
-  name: string
-  title: string
-  description?: string
-  drive_link: string
-  url: string
-  file_type: string
-  type: string
-  branch_id: string
-  year_id: string
-  semester_id: string
-  uploader_id?: string
-  created_at: string
-  category?: string
-  subject?: string
-  unit?: number
-  date?: string
-  is_pdf?: boolean
-  branch?: any
-  year?: any
-  semester?: any
-}
-
-// Transformation function to convert API/DTO format to canonical Resource format
-function transformResourceDTOToResource(dto: ResourceDTO): Resource {
-  return {
-    id: dto.id,
-    title: dto.title || dto.name, // prefer canonical field, fallback to legacy
-    description: dto.description,
-    drive_link: dto.drive_link || dto.url, // prefer canonical field, fallback to legacy
-    file_type: dto.file_type || dto.type, // prefer canonical field, fallback to legacy
-    branch_id: dto.branch_id,
-    year_id: dto.year_id,
-    semester_id: dto.semester_id,
-    uploader_id: dto.uploader_id,
-    created_at: dto.created_at || dto.date || new Date().toISOString(), // prefer canonical field, fallback to legacy or current time
-    category: dto.category,
-    subject: dto.subject,
-    unit: dto.unit,
-    date: dto.date || dto.created_at, // for backward compatibility in UI
-    is_pdf: dto.is_pdf,
-    regulation: undefined, // not provided by current API
-    archived: false, // default value
-    deleted_at: undefined,
-    updated_at: dto.created_at,
-    branch: dto.branch,
-    year: dto.year,
-    semester: dto.semester,
-    uploader: undefined // not provided by current API
-  }
-}
+import { useResources, useSubjects, useDynamicData } from '@/hooks/use-academic-data'
 
 const CATEGORY_TITLES: Record<string, string> = {
   notes: 'Notes',
@@ -91,15 +37,70 @@ export default function SubjectPage({
 }) {
   const unwrappedParams = use(params)
   const { category } = unwrappedParams
-  const { subjects, profile, resources: bulkResources, dynamicData, forceRefresh } = useProfile()
+  const { profile } = useProfile()
 
-  const [usersCount, setUsersCount] = useState<number>(0)
+  // Resolve Context Params
+  const qpYear = Array.isArray(searchParams.year) ? searchParams.year[0] : searchParams.year
+  const qpBranch = Array.isArray(searchParams.branch) ? searchParams.branch[0] : searchParams.branch
+  const qpSemester = Array.isArray(searchParams.semester) ? searchParams.semester[0] : searchParams.semester
 
-  useEffect(() => {
-    if (dynamicData?.usersCount) {
-      setUsersCount(dynamicData.usersCount)
-    }
-  }, [dynamicData?.usersCount])
+  const year = qpYear || profile?.year
+  const branch = qpBranch || profile?.branch
+  const semester = qpSemester || profile?.semester
+
+  let decodedSubject = ''
+  try {
+    decodedSubject = decodeURIComponent(unwrappedParams.subject)
+  } catch {
+    decodedSubject = ''
+  }
+
+  // --- Data Fetching ---
+
+  // 1. Dynamic Data (User Count)
+  const { data: dynamicData } = useDynamicData({
+    branch: profile?.branch,
+    year: profile?.year
+  })
+  const usersCount = dynamicData?.usersCount || 0
+
+  // 2. Subjects (For Display Name)
+  const resourceType = getResourceTypeForCategory(category)
+  const { data: subjectsData } = useSubjects({
+    year,
+    branch,
+    semester,
+    resourceType: resourceType || undefined,
+    enabled: !!year && !!branch && !!semester
+  })
+  const subjects = subjectsData?.subjects || []
+
+  // 3. Resources
+  const { 
+    data: resourcesData, 
+    isLoading: loading, 
+    error: resourcesError, 
+    refetch 
+  } = useResources({
+    category,
+    subject: decodedSubject,
+    year,
+    branch,
+    semester,
+    enabled: !!decodedSubject
+  })
+  
+  const resources = resourcesData || []
+  const error = resourcesError ? (resourcesError as Error).message : null
+
+  // --- UI State ---
+  const [expandedUnits, setExpandedUnits] = useState<Set<number>>(new Set())
+  const [loadingFile, setLoadingFile] = useState<string | null>(null)
+  const [selectedUnit, setSelectedUnit] = useState<string>('all')
+  const [selectedType, setSelectedType] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'name_asc'>('date_desc')
+  const [query, setQuery] = useState<string>('')
+  const [expandAll, setExpandAll] = useState<boolean>(false)
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -116,39 +117,13 @@ export default function SubjectPage({
     }
   }
 
-  // Local state for resources and UI
-  const [resources, setResources] = useState<Resource[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [expandedUnits, setExpandedUnits] = useState<Set<number>>(new Set())
-  const [loadingFile, setLoadingFile] = useState<string | null>(null)
-  const [selectedUnit, setSelectedUnit] = useState<string>('all')
-  const [selectedType, setSelectedType] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'name_asc'>('date_desc')
-  const [query, setQuery] = useState<string>('')
-  const [expandAll, setExpandAll] = useState<boolean>(false)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-
-  const lastFetchRef = useRef<number>(0)
-  const REVALIDATE_COOLDOWN = 5 * 60 * 1000 // 5 minutes
-
-  let decodedSubject = ''
-  try {
-    decodedSubject = decodeURIComponent(unwrappedParams.subject)
-  } catch {
-    decodedSubject = ''
-  }
-
-  // Compute subject display name using context subjects and category filter
-  const subjectNameFromContext = useMemo(() => {
+  // Compute subject display name using fetched subjects
+  const subjectName = useMemo(() => {
     if (!decodedSubject) return ''
-    const resourceType = getResourceTypeForCategory(category)
-    const list: Subject[] = Array.isArray(subjects) ? subjects : []
-    const filtered = resourceType ? list.filter((s: Subject) => (s?.resource_type || 'resources') === resourceType) : list
-    return getSubjectDisplayByCode(filtered, decodedSubject, true)
-  }, [subjects, category, decodedSubject])
+    // Cast strict type to compatible type for helper
+    return getSubjectDisplayByCode(subjects as Subject[], decodedSubject, true)
+  }, [subjects, decodedSubject])
 
-  const subjectName = subjectNameFromContext
   const categoryTitle = CATEGORY_TITLES[category]
 
   if (!categoryTitle || !decodedSubject) {
@@ -176,19 +151,21 @@ export default function SubjectPage({
       const matchesUnit = selectedUnit === 'all' || (r.unit || 1) === parseInt(selectedUnit)
       return matchesType && matchesText && matchesUnit
     })
-    const parseDate = (d: string) => {
-      const t = Date.parse(d)
+    const parseDate = (d: string | undefined) => {
+      const t = d ? Date.parse(d) : 0
       return Number.isNaN(t) ? 0 : t
     }
     const sorted = [...filtered].sort((a, b) => {
+      const dateA = a.date || a.created_at
+      const dateB = b.date || b.created_at
       if (sortBy === 'name_asc') return (a.name || a.title).localeCompare(b.name || b.title)
-      if (sortBy === 'date_asc') return parseDate(a.date || a.created_at) - parseDate(b.date || b.created_at)
-      return parseDate(b.date || b.created_at) - parseDate(a.date || a.created_at) // date_desc
+      if (sortBy === 'date_asc') return parseDate(dateA) - parseDate(dateB)
+      return parseDate(dateB) - parseDate(dateA) // date_desc
     })
     return sorted
   }, [resources, selectedType, query, selectedUnit, sortBy])
 
-  // Group resources by unit (from filtered list)
+  // Group resources by unit
   const resourcesByUnit = useMemo(() => {
     const grouped: Record<number, Resource[]> = {}
     visibleResources.forEach(resource => {
@@ -196,7 +173,6 @@ export default function SubjectPage({
       if (!grouped[unit]) grouped[unit] = []
       grouped[unit].push(resource)
     })
-    // keep items inside each unit sorted by current sort order (already sorted)
     return grouped
   }, [visibleResources])
 
@@ -209,7 +185,7 @@ export default function SubjectPage({
   useEffect(() => {
     if (selectedUnit !== 'all') {
       setExpandAll(false)
-      setExpandedUnits(new Set()) // not used in single-unit view
+      setExpandedUnits(new Set()) 
       return
     }
     if (expandAll) {
@@ -230,7 +206,7 @@ export default function SubjectPage({
     setExpandedUnits(newExpanded)
   }
 
-  // Handle file access directly
+  // Handle file access
   const handleFileAccess = async (resource: Resource, action: 'view' | 'download') => {
     const url = resource.url || resource.drive_link
     if (!url) {
@@ -256,160 +232,6 @@ export default function SubjectPage({
     }
   }
 
-  // Fetch resources on mount
-  useEffect(() => {
-    async function fetchResources(forceRefresh = false) {
-      lastFetchRef.current = Date.now()
-      setLoading(true)
-      setError(null)
-
-      // Normalize search params early for cache key
-      const normalize = (value: string | string[] | undefined) =>
-        Array.isArray(value) ? value[0] : value ?? undefined
-      const qpYear = normalize(searchParams.year)
-      const qpSem = normalize(searchParams.semester)
-      const qpBranch = normalize(searchParams.branch)
-
-      // Compute cache key for logging
-      const cacheKey = `resources_${category}_${decodedSubject}_${qpYear || 'none'}_${qpSem || 'none'}_${qpBranch || 'none'}`
-
-      // If force refresh, clear all caches first
-      if (forceRefresh) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] Force refresh: clearing all caches for ${cacheKey}`)
-        }
-        // Clear the specific resource cache
-        ResourcesCache.clearAll()
-        // Note: We skip bulk resources check when force refreshing
-      }
-
-      // FIRST: Check bulk-fetched resources from context (skip if force refresh)
-      if (!forceRefresh && bulkResources && typeof bulkResources === 'object') {
-        const subjectLower = decodedSubject.toLowerCase()
-        const subjectResources = bulkResources[subjectLower]
-
-        if (subjectResources && typeof subjectResources === 'object') {
-          const categoryResources = subjectResources[category]
-
-          if (Array.isArray(categoryResources) && categoryResources.length > 0) {
-            // Transform to canonical Resource format
-            const transformedResources: Resource[] = categoryResources.map(transformResourceDTOToResource)
-            setResources(transformedResources)
-            setLoading(false)
-            return
-          }
-        }
-      }
-
-      // SECOND: Check ResourcesCache (separate cache for individual pages) (skip if force refresh)
-      if (!forceRefresh) {
-        const cached = ResourcesCache.get(category, decodedSubject, qpYear, qpSem, qpBranch)
-        if (cached) {
-          const metadata = ResourcesCache.getCacheMetadata(category, decodedSubject, qpYear, qpSem, qpBranch)
-          if (metadata) {
-            // Only use cache if not expired
-            if (!metadata.isExpired) {
-              setResources(cached)
-              setLoading(false)
-              return
-            } else {
-            }
-            // If expired, proceed to fetch fresh data
-          }
-        }
-      }
-
-      // THIRD: Fetch from API as fallback
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[DEBUG] ${forceRefresh ? 'Force refresh' : 'Resources not in cache'}, fetching from API for key: ${cacheKey}`)
-      }
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[DEBUG] Fetching for params: category=${category}, subject=${decodedSubject}, year=${qpYear}, semester=${qpSem}, branch=${qpBranch}`)
-      }
-
-      const queryParams = new URLSearchParams({
-        category,
-        subject: decodedSubject
-      })
-
-      if (qpYear) queryParams.set('year', qpYear)
-      if (qpSem) queryParams.set('semester', qpSem)
-      if (qpBranch) queryParams.set('branch', qpBranch)
-
-      const startTime = performance.now()
-
-      try {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] Fetching resources - sanitized params:`, {
-            category,
-            subject: decodedSubject,
-            hasYear: !!qpYear,
-            hasSem: !!qpSem,
-            hasBranch: !!qpBranch
-          })
-        }
-        const response = await fetch(`/api/resources?${queryParams.toString()}`, { cache: 'no-store' })
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] Response status: ${response.status}`)
-        }
-        if (!response.ok) {
-          throw new Error(`Failed to fetch resources: ${response.status}`)
-        }
-        const data = await response.json()
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] Received ${Array.isArray(data) ? data.length : 0} resources`)
-        }
-        const apiResources = Array.isArray(data) ? data : []
-
-        // Transform API response (DTO format) to canonical Resource format
-        const transformedResources: Resource[] = apiResources.map(transformResourceDTOToResource)
-
-        // Log successful transformation for debugging
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] API returned ${apiResources.length} resources, transformed to canonical Resource format`)
-        }
-
-        setResources(transformedResources)
-        // Cache the transformed resources (canonical format)
-        ResourcesCache.set(category, decodedSubject, transformedResources, qpYear, qpSem, qpBranch)
-      } catch (err: any) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[DEBUG] Error fetching resources:', {
-            message: err.message,
-            hasSensitiveInfo: err.message?.includes('year') || err.message?.includes('semester') || err.message?.includes('branch'),
-            errorType: typeof err
-          })
-        }
-        setError(err.message || 'Failed to load resources')
-      } finally {
-        const duration = performance.now() - startTime
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEBUG] Resource fetch duration: ${Math.round(duration)}ms`)
-        }
-        setLoading(false)
-      }
-    }
-
-    // Check if this is a force refresh (refreshTrigger > 0)
-    const isForceRefresh = refreshTrigger > 0
-    fetchResources(isForceRefresh)
-  }, [category, decodedSubject, searchParams.year, searchParams.semester, searchParams.branch, refreshTrigger, bulkResources])
-
-  // Revalidate on window focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const now = Date.now()
-      if (!document.hidden && now - lastFetchRef.current > REVALIDATE_COOLDOWN) {
-        lastFetchRef.current = now
-        setRefreshTrigger(prev => prev + 1)
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
-
   const resultCount = visibleResources.length
 
   return (
@@ -422,7 +244,7 @@ export default function SubjectPage({
             <Breadcrumb items={[
               { label: "Home", href: "/" },
               { label: categoryTitle, href: `/resources/${category}` },
-              { label: subjectName, isCurrentPage: true }
+              { label: subjectName || decodedSubject, isCurrentPage: true }
             ]} />
           </div>
           <div className="flex items-center gap-4">
@@ -443,9 +265,9 @@ export default function SubjectPage({
       <div className="space-y-6">
         <div className="space-y-2">
           <div className="flex items-start justify-center">
-            <h1 className="text-3xl font-bold tracking-tight text-center">{subjectName} {categoryTitle}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-center">{subjectName || decodedSubject} {categoryTitle}</h1>
           </div>
-          <p className="text-muted-foreground text-center">Access all {subjectName} {categoryTitle} with quick filters and smart dropdowns</p>
+          <p className="text-muted-foreground text-center">Access all {subjectName || decodedSubject} {categoryTitle} with quick filters and smart dropdowns</p>
         </div>
       </div>
 
@@ -453,7 +275,7 @@ export default function SubjectPage({
         <CardHeader className="pb-3">
           <CardTitle>Available Resources</CardTitle>
           <CardDescription>
-            Filter, sort and browse all {subjectName} {categoryTitle} organized by unit
+            Filter, sort and browse all {subjectName || decodedSubject} {categoryTitle} organized by unit
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -525,12 +347,7 @@ export default function SubjectPage({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={async () => {
-                    // Clear all caches including bulk resources
-                    await forceRefresh()
-                    // Trigger local refresh
-                    setRefreshTrigger(prev => prev + 1)
-                  }}
+                  onClick={() => refetch()}
                   disabled={loading}
                   className="hidden sm:inline-flex"
                 >
@@ -722,8 +539,6 @@ export default function SubjectPage({
           )}
         </CardContent>
       </Card>
-
-
     </div>
   )
 }

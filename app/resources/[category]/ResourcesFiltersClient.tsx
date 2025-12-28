@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { Subject } from '@/lib/enhanced-profile-context'
 import { getResourceTypeForCategory } from '@/lib/resource-utils'
 import { useProfile } from '@/lib/enhanced-profile-context'
+import { useSubjects } from '@/hooks/use-academic-data'
 import { getSubjectDisplay } from '@/lib/subject-display'
 
 type ResourceSubject = Subject
@@ -28,19 +29,49 @@ interface ResourcesFiltersClientProps {
 
 export default function ResourcesFiltersClient({ category, categoryData, context }: ResourcesFiltersClientProps) {
   const searchParams = useSearchParams()
-  const { subjects, loading } = useProfile()
+  const { profile } = useProfile()
 
-  const filteredSubjects = useMemo(() => {
-    const resourceType = getResourceTypeForCategory(category)
-    if (!Array.isArray(subjects) || subjects.length === 0) return []
-    if (!resourceType) return subjects as ResourceSubject[]
-    return subjects.filter((s: Subject) => (s?.resource_type || 'resources') === resourceType) as ResourceSubject[]
-  }, [subjects, category])
+  // Determine context params
+  let year: string | number | null | undefined = searchParams.get('year')
+  let branch: string | null | undefined = searchParams.get('branch')
+  let semester: string | number | null | undefined = searchParams.get('semester')
+
+  if (context) {
+    branch = context.branch
+    // naive parsing of yearSem "31" -> year 3, sem 1
+    if (context.yearSem.length === 2) {
+        year = context.yearSem.charAt(0)
+        semester = context.yearSem.charAt(1)
+    }
+  } else if (!year && !branch && profile) {
+    // Fallback to profile if no explicit params
+    year = profile.year
+    branch = profile.branch
+    semester = profile.semester
+  }
+
+  const resourceType = getResourceTypeForCategory(category)
+
+  const { data: subjectsData, isLoading } = useSubjects({
+    year,
+    branch,
+    semester,
+    resourceType: resourceType || undefined,
+    enabled: !!year && !!branch && !!semester
+  })
+
+  // useSubjects returns { subjects: [...] }
+  const subjects = subjectsData?.subjects || []
+
+  // If resourceType was passed to API, it's already filtered. 
+  // But we can double check or just use it directly. 
+  // The API filter logic matches the previous client-side logic.
+  const filteredSubjects = subjects as ResourceSubject[]
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {!loading && filteredSubjects.map((s: ResourceSubject) => {
+      {!isLoading && filteredSubjects.map((s: ResourceSubject) => {
         let href: string;
         
         if (context) {
@@ -49,12 +80,10 @@ export default function ResourcesFiltersClient({ category, categoryData, context
         } else {
           // Fallback to legacy query params
           const qp = new URLSearchParams()
-          const year = searchParams.get('year')
-          const semester = searchParams.get('semester')
-          const branch = searchParams.get('branch')
-          if (year) qp.set('year', year)
-          if (semester) qp.set('semester', semester)
-          if (branch) qp.set('branch', branch)
+          // Use the resolved values for links to persist context
+          if (year) qp.set('year', String(year))
+          if (semester) qp.set('semester', String(semester))
+          if (branch) qp.set('branch', branch || '')
           const q = qp.toString()
           href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`
         }
@@ -73,10 +102,12 @@ export default function ResourcesFiltersClient({ category, categoryData, context
           </Link>
         )
       })}
-      {!loading && filteredSubjects.length === 0 && (
-        <div className="text-sm text-muted-foreground">No subjects configured for your context.</div>
+      {!isLoading && filteredSubjects.length === 0 && (
+        <div className="text-sm text-muted-foreground col-span-full text-center p-8">
+            No subjects found for {branch?.toUpperCase()} {year}-{semester}.
+        </div>
       )}
-      {loading && (
+      {isLoading && (
         <>
           <Card className="h-full">
             <CardHeader>
