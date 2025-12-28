@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Subject, Resource, Branch, Year, Semester } from '@/lib/types'
 import { fetchApi } from '@/lib/api-utils'
+import { CACHE_TTL } from '@/lib/constants'
 
 // Response types
 interface SubjectsResponse {
@@ -63,7 +64,7 @@ export function useSubjects({ year, branch, semester, regulation, resourceType, 
       return fetchApi<SubjectsResponse>(`/api/subjects?${params.toString()}`)
     },
     enabled: enabled && !!year && !!branch && !!semester,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: CACHE_TTL.SUBJECTS * 1000,
   })
 }
 
@@ -85,7 +86,7 @@ export function useResources({ category, subject, unit, year, branch, semester, 
       return fetchApi<Resource[]>(`/api/resources?${params.toString()}`)
     },
     enabled: enabled && !!category && !!subject,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: CACHE_TTL.RESOURCES * 1000,
   })
 }
 
@@ -102,6 +103,6 @@ export function useDynamicData({ branch, year, enabled = true }: UseDynamicDataP
       return data.dynamic as DynamicDataResponse
     },
     enabled: enabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: CACHE_TTL.DYNAMIC_DATA * 1000,
   })
 }
