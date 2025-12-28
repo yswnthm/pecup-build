@@ -1,0 +1,55 @@
+$ next build
+   ▲ Next.js 15.2.6
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ webpackBuildWorker
+     ✓ parallelServerCompiles
+     ✓ parallelServerBuildTraces
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 2000ms
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+[Redis] REDIS_URL not set, caching will be disabled
+[Redis] REDIS_URL not set, caching will be disabled
+[Redis] REDIS_URL not set, caching will be disabled
+   Generating static pages (0/18) ...
+   Generating static pages (4/18) 
+   Generating static pages (8/18) 
+[Redis] REDIS_URL not set, caching will be disabled
+   Generating static pages (13/18) 
+ ✓ Generating static pages (18/18)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                   Size  First Load JS
+┌ ○ /                                                      2.26 kB         137 kB
+├ ○ /_not-found                                              978 B         101 kB
+├ ƒ /[regulation]/[branch]/[yearSem]                         150 B         165 kB
+├ ƒ /[regulation]/[branch]/[yearSem]/[category]            1.46 kB         127 kB
+├ ƒ /[regulation]/[branch]/[yearSem]/[category]/[subject]  4.24 kB         149 kB
+├ ƒ /api/fetch-academic-data                                 157 B         101 kB
+├ ƒ /api/profile                                             157 B         101 kB
+├ ƒ /api/recent-updates                                      157 B         101 kB
+├ ƒ /api/resources                                           157 B         101 kB
+├ ƒ /api/resources/all                                       157 B         101 kB
+├ ƒ /api/subjects                                            157 B         101 kB
+├ ƒ /api/user/context                                        157 B         101 kB
+├ ƒ /api/users-count                                         157 B         101 kB
+├ ○ /apple-icon.png                                            0 B            0 B
+├ ○ /home                                                    150 B         165 kB
+├ ○ /icon.png                                                  0 B            0 B
+├ ○ /manifest.webmanifest                                    157 B         101 kB
+├ ○ /profile                                               3.93 kB         142 kB
+├ ƒ /resources/[category]                                  1.15 kB         126 kB
+└ ƒ /resources/[category]/[subject]                        3.94 kB         157 kB
++ First Load JS shared by all                               101 kB
+  ├ chunks/4bd1b696-8be99140eb29644d.js                    53.3 kB
+  ├ chunks/684-4fe06b866a0a5f7f.js                         45.3 kB
+  └ other shared chunks (total)                             1.9 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
