@@ -6,12 +6,12 @@
 - [x] Task: Establish a baseline bundle size report for comparison d75824d
 - [x] Task: Conductor - User Manual Verification 'Environment & Tooling Setup' (Protocol in workflow.md) 28844d4
 
-## Phase 2: Dead Code Elimination
+## Phase 2: Dead Code Elimination [checkpoint: 01689e9]
 - [x] Task: Execute `knip` to identify unused files and remove them 0a738f0
 - [x] Task: Identify and remove unused dependencies from `package.json` 56d1155
 - [x] Task: Prune unused exports and variables identified by `knip` c9de876
 - [x] Task: Run existing test suite to ensure no regressions after removal 2e4f745
-- [ ] Task: Conductor - User Manual Verification 'Dead Code Elimination' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Dead Code Elimination' (Protocol in workflow.md) 4a8492f
 
 ## Phase 3: Standardization & Refactoring
 - [ ] Task: Centralize UI components (consolidate fragmented components into `components/ui/`)
