@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 
 import { Header } from '@/components/Header'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 
 import Hero from '@/components/Hero'

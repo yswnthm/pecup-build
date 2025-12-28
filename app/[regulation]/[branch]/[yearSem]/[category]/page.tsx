@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { useEffect, useState, use } from 'react'
 import { useProfile } from '@/lib/enhanced-profile-context'
 import { notFound } from 'next/navigation'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 import ResourcesFiltersClient from '@/app/resources/[category]/ResourcesFiltersClient'
 

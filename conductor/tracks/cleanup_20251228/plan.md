@@ -14,7 +14,7 @@
 - [x] Task: Conductor - User Manual Verification 'Dead Code Elimination' (Protocol in workflow.md) 4a8492f
 
 ## Phase 3: Standardization & Refactoring
-- [ ] Task: Centralize UI components (consolidate fragmented components into `components/ui/`)
+- [~] Task: Centralize UI components (consolidate fragmented components into `components/ui/`)
 - [ ] Task: Refactor API routes to use a standardized response/error structure
 - [ ] Task: Refactor data fetching hooks for consistent patterns
 - [ ] Task: Extract hardcoded strings and magic numbers into `lib/constants.ts` or config files
