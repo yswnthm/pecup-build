@@ -54,9 +54,9 @@ export function DashboardClient() {
     })
 
     // Construct query params for resource links or context-based paths
-    const getCategoryPath = (basePath: string) => {
+    const getCategoryPath = useCallback((basePath: string) => {
         if (profile?.branch && profile?.year && profile?.semester) {
-            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\\d+)\\//i) : null;
+            const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/(r\d+)\/\//i) : null;
             const regulation = match ? match[1] : 'r23';
 
             if (typeof window !== 'undefined' && window.location.pathname.startsWith(`/${regulation}`)) {
@@ -73,10 +73,10 @@ export function DashboardClient() {
         if (profile?.branch) p.set('branch', profile.branch)
         const s = p.toString()
         return `${basePath}${s ? `?${s}` : ''}`
-    }
+    }, [profile])
 
     // Helpers
-    const getRoleDisplay = (role: string) => {
+    const getRoleDisplay = useCallback((role: string) => {
         switch (role) {
             case 'student':
                 return <Badge variant="secondary">Student</Badge>
@@ -89,13 +89,13 @@ export function DashboardClient() {
             default:
                 return <Badge variant="outline">{role}</Badge>
         }
-    }
+    }, [])
 
 
     // Prefetching
     const queryClient = useQueryClient()
 
-    const prefetchCategory = (category: string) => {
+    const prefetchCategory = useCallback((category: string) => {
         if (!profile?.branch || !profile?.year || !profile?.semester) return
 
         const params = new URLSearchParams()
@@ -114,9 +114,9 @@ export function DashboardClient() {
             },
             staleTime: 1000 * 60 * 5 // 5 min
         })
-    }
+    }, [profile, queryClient])
 
-    const categories = [
+    const categories = useMemo(() => [
         {
             name: CATEGORY_TITLES.notes,
             description: CATEGORY_DESCRIPTIONS.notes,
@@ -153,7 +153,7 @@ export function DashboardClient() {
             color: "bg-primary/10",
             iconColor: "text-primary",
         },
-    ]
+    ], [])
 
     const breadcrumbs = useMemo(() => {
         if (profile?.branch && profile?.year && profile?.semester) {
