@@ -19,21 +19,18 @@ export async function getUserPermissions(userContext?: UserContext): Promise<Use
     return {
       canRead: {
         resources: false,
-        reminders: false,
         recentUpdates: false,
         exams: false,
         profiles: false
       },
       canWrite: {
         resources: false,
-        reminders: false,
         recentUpdates: false,
         exams: false,
         profiles: false
       },
       canDelete: {
         resources: false,
-        reminders: false,
         recentUpdates: false,
         exams: false,
         profiles: false
@@ -47,21 +44,18 @@ export async function getUserPermissions(userContext?: UserContext): Promise<Use
       return {
         canRead: {
           resources: true,  // Filtered by their branch/year
-          reminders: true,  // Filtered by their branch/year
           recentUpdates: true,  // Filtered by their branch/year
           exams: true,  // Filtered by their branch/year
           profiles: false  // Only their own profile
         },
         canWrite: {
           resources: false,
-          reminders: false,
           recentUpdates: false,
           exams: false,
           profiles: false  // Only their own profile updates
         },
         canDelete: {
           resources: false,
-          reminders: false,
           recentUpdates: false,
           exams: false,
           profiles: false
@@ -73,21 +67,18 @@ export async function getUserPermissions(userContext?: UserContext): Promise<Use
       return {
         canRead: {
           resources: true,
-          reminders: true,
           recentUpdates: true,
           exams: true,
           profiles: false  // Only their own profile
         },
         canWrite: {
           resources: true,  // For their assigned branch/year
-          reminders: true,  // For their assigned branch/year
           recentUpdates: true,  // For their assigned branch/year
           exams: true,  // For their assigned branch/year
           profiles: false  // Only their own profile updates
         },
         canDelete: {
           resources: true,  // For their assigned branch/year
-          reminders: true,  // For their assigned branch/year
           recentUpdates: true,  // For their assigned branch/year
           exams: true,  // For their assigned branch/year
           profiles: false
@@ -100,25 +91,21 @@ export async function getUserPermissions(userContext?: UserContext): Promise<Use
       }
 
     case 'admin':
-    case 'superadmin':
       return {
         canRead: {
           resources: true,
-          reminders: true,
           recentUpdates: true,
           exams: true,
           profiles: true
         },
         canWrite: {
           resources: true,
-          reminders: true,
           recentUpdates: true,
           exams: true,
           profiles: true
         },
         canDelete: {
           resources: true,
-          reminders: true,
           recentUpdates: true,
           exams: true,
           profiles: true
@@ -131,21 +118,18 @@ export async function getUserPermissions(userContext?: UserContext): Promise<Use
       return {
         canRead: {
           resources: false,
-          reminders: false,
           recentUpdates: false,
           exams: false,
           profiles: false
         },
         canWrite: {
           resources: false,
-          reminders: false,
           recentUpdates: false,
           exams: false,
           profiles: false
         },
         canDelete: {
           resources: false,
-          reminders: false,
           recentUpdates: false,
           exams: false,
           profiles: false

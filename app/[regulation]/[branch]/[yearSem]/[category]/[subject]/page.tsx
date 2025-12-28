@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getResourceTypeForCategory } from '@/lib/resource-utils'
 import { useProfile, type Subject } from '@/lib/enhanced-profile-context'
 import { getSubjectDisplayByCode } from '@/lib/subject-display'
+import { Resource } from '@/lib/types'
 import { ResourcesCache } from '@/lib/simple-cache'
 import { generateBreadcrumbs } from '@/lib/navigation-utils'
 

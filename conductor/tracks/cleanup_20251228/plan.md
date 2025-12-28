@@ -30,6 +30,6 @@
 
 ## Phase 5: Final Quality Gate & Verification
 - [x] Task: Run full test suite with coverage report (>80% target) 97e2df3
-- [ ] Task: Execute final linting and type checking (`tsc`, `eslint`)
+- [~] Task: Execute final linting and type checking (`tsc`, `eslint`)
 - [ ] Task: Compare final bundle size with baseline
 - [ ] Task: Conductor - User Manual Verification 'Final Quality Gate & Verification' (Protocol in workflow.md)

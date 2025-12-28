@@ -85,7 +85,7 @@ export default function ResourcesFiltersClient({ category, categoryData, context
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {!isLoading && subjects.map((s: ResourceSubject) => (
+        {!isLoading && (subjects as any[]).map((s: ResourceSubject) => (
           <Link key={s.code} href={getSubjectHref(s)} className="block">
             <Card className="h-full transition-all-smooth hover-lift">
               <CardHeader>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import Link from "next/link"
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'

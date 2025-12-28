@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/113</span>
+                <span class='fraction'>0/140</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/113</span>
+                <span class='fraction'>0/140</span>
             </div>
         
             
@@ -176,7 +176,61 @@
 <a name='L111'></a><a href='#L111'>111</a>
 <a name='L112'></a><a href='#L112'>112</a>
 <a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -294,12 +348,13 @@
 <span class="cstat-no" title="statement not covered" >import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"</span>
 <span class="cstat-no" title="statement not covered" >import Link from "next/link"</span>
 <span class="cstat-no" title="statement not covered" >import { ChevronRight } from "lucide-react"</span>
-<span class="cstat-no" title="statement not covered" >import { useMemo } from 'react'</span>
+<span class="cstat-no" title="statement not covered" >import { useMemo, useCallback } from 'react'</span>
 <span class="cstat-no" title="statement not covered" >import { useSearchParams } from 'next/navigation'</span>
 <span class="cstat-no" title="statement not covered" >import { Skeleton } from '@/components/ui/skeleton'</span>
 <span class="cstat-no" title="statement not covered" >import type { Subject } from '@/lib/enhanced-profile-context'</span>
 <span class="cstat-no" title="statement not covered" >import { getResourceTypeForCategory } from '@/lib/resource-utils'</span>
 <span class="cstat-no" title="statement not covered" >import { useProfile } from '@/lib/enhanced-profile-context'</span>
+<span class="cstat-no" title="statement not covered" >import { useSubjects } from '@/hooks/use-academic-data'</span>
 <span class="cstat-no" title="statement not covered" >import { getSubjectDisplay } from '@/lib/subject-display'</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >type ResourceSubject = Subject</span>
@@ -319,39 +374,64 @@
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >export default function ResourcesFiltersClient({ category, categoryData, context }: ResourcesFiltersClientProps) {</span>
 <span class="cstat-no" title="statement not covered" >  const searchParams = useSearchParams()</span>
-<span class="cstat-no" title="statement not covered" >  const { subjects, loading } = useProfile()</span>
+<span class="cstat-no" title="statement not covered" >  const { profile } = useProfile()</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  const filteredSubjects = useMemo(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const resourceType = getResourceTypeForCategory(category)</span>
-<span class="cstat-no" title="statement not covered" >    if (!Array.isArray(subjects) || subjects.length === 0) return []</span>
-<span class="cstat-no" title="statement not covered" >    if (!resourceType) return subjects as ResourceSubject[]</span>
-<span class="cstat-no" title="statement not covered" >    return subjects.filter((s: Subject) =&gt; (s?.resource_type || 'resources') === resourceType) as ResourceSubject[]</span>
-<span class="cstat-no" title="statement not covered" >  }, [subjects, category])</span>
+<span class="cstat-no" title="statement not covered" >  // Determine context params</span>
+<span class="cstat-no" title="statement not covered" >  const contextParams = useMemo(() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    let year: string | number | null | undefined = searchParams.get('year')</span>
+<span class="cstat-no" title="statement not covered" >    let branch: string | null | undefined = searchParams.get('branch')</span>
+<span class="cstat-no" title="statement not covered" >    let semester: string | number | null | undefined = searchParams.get('semester')</span>
+<span class="cstat-no" title="statement not covered" >    let regulation: string | null | undefined = searchParams.get('regulation')</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    if (context) {</span>
+<span class="cstat-no" title="statement not covered" >      branch = context.branch</span>
+<span class="cstat-no" title="statement not covered" >      regulation = context.regulation</span>
+<span class="cstat-no" title="statement not covered" >      if (context.yearSem.length === 2) {</span>
+<span class="cstat-no" title="statement not covered" >        year = context.yearSem.charAt(0)</span>
+<span class="cstat-no" title="statement not covered" >        semester = context.yearSem.charAt(1)</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    } else if (!year &amp;&amp; !branch &amp;&amp; profile) {</span>
+<span class="cstat-no" title="statement not covered" >      year = profile.year</span>
+<span class="cstat-no" title="statement not covered" >      branch = profile.branch</span>
+<span class="cstat-no" title="statement not covered" >      semester = profile.semester</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    return { year, branch, semester, regulation }</span>
+<span class="cstat-no" title="statement not covered" >  }, [searchParams, context, profile])</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  const { year, branch, semester, regulation } = contextParams</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  const resourceType = useMemo(() =&gt; getResourceTypeForCategory(category), [category])</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  const { data: subjectsData, isLoading } = useSubjects({</span>
+<span class="cstat-no" title="statement not covered" >    year,</span>
+<span class="cstat-no" title="statement not covered" >    branch,</span>
+<span class="cstat-no" title="statement not covered" >    semester,</span>
+<span class="cstat-no" title="statement not covered" >    regulation, </span>
+<span class="cstat-no" title="statement not covered" >    resourceType: resourceType || undefined,</span>
+<span class="cstat-no" title="statement not covered" >    enabled: !!year &amp;&amp; !!branch &amp;&amp; !!semester</span>
+<span class="cstat-no" title="statement not covered" >  })</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  const subjects = useMemo(() =&gt; subjectsData?.subjects || [], [subjectsData])</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  const getSubjectHref = useCallback((s: ResourceSubject) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (context) {</span>
+<span class="cstat-no" title="statement not covered" >      return `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`</span>
+<span class="cstat-no" title="statement not covered" >    } else {</span>
+<span class="cstat-no" title="statement not covered" >      const qp = new URLSearchParams()</span>
+<span class="cstat-no" title="statement not covered" >      if (year) qp.set('year', String(year))</span>
+<span class="cstat-no" title="statement not covered" >      if (semester) qp.set('semester', String(semester))</span>
+<span class="cstat-no" title="statement not covered" >      if (branch) qp.set('branch', branch || '')</span>
+<span class="cstat-no" title="statement not covered" >      const q = qp.toString()</span>
+<span class="cstat-no" title="statement not covered" >      return `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }, [context, category, year, semester, branch])</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div className="space-y-4"&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      {!loading &amp;&amp; filteredSubjects.map((s: ResourceSubject) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        let href: string;</span>
-<span class="cstat-no" title="statement not covered" >        </span>
-<span class="cstat-no" title="statement not covered" >        if (context) {</span>
-<span class="cstat-no" title="statement not covered" >          // Use hierarchical URL if context is provided</span>
-<span class="cstat-no" title="statement not covered" >          href = `/${context.regulation}/${context.branch}/${context.yearSem}/${category}/${encodeURIComponent(s.code.toLowerCase())}`</span>
-<span class="cstat-no" title="statement not covered" >        } else {</span>
-<span class="cstat-no" title="statement not covered" >          // Fallback to legacy query params</span>
-<span class="cstat-no" title="statement not covered" >          const qp = new URLSearchParams()</span>
-<span class="cstat-no" title="statement not covered" >          const year = searchParams.get('year')</span>
-<span class="cstat-no" title="statement not covered" >          const semester = searchParams.get('semester')</span>
-<span class="cstat-no" title="statement not covered" >          const branch = searchParams.get('branch')</span>
-<span class="cstat-no" title="statement not covered" >          if (year) qp.set('year', year)</span>
-<span class="cstat-no" title="statement not covered" >          if (semester) qp.set('semester', semester)</span>
-<span class="cstat-no" title="statement not covered" >          if (branch) qp.set('branch', branch)</span>
-<span class="cstat-no" title="statement not covered" >          const q = qp.toString()</span>
-<span class="cstat-no" title="statement not covered" >          href = `/resources/${category}/${encodeURIComponent(s.code.toLowerCase())}${q ? `?${q}` : ''}`</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >        return (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Link key={s.code} href={href} className="block"&gt;</span>
+<span class="cstat-no" title="statement not covered" >        {!isLoading &amp;&amp; subjects.map((s: ResourceSubject) =&gt; (</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Link key={s.code} href={getSubjectHref(s)} className="block"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Card className="h-full transition-all-smooth hover-lift"&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;CardHeader&gt;</span>
 <span class="cstat-no" title="statement not covered" >                &lt;CardTitle&gt;{getSubjectDisplay(s, true)}&lt;/CardTitle&gt;</span>
@@ -362,42 +442,43 @@
 <span class="cstat-no" title="statement not covered" >              &lt;/CardContent&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/Card&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Link&gt;</span>
-<span class="cstat-no" title="statement not covered" >        )</span>
-<span class="cstat-no" title="statement not covered" >      })}</span>
-<span class="cstat-no" title="statement not covered" >      {!loading &amp;&amp; filteredSubjects.length === 0 &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >        &lt;div className="text-sm text-muted-foreground"&gt;No subjects configured for your context.&lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >      )}</span>
-<span class="cstat-no" title="statement not covered" >      {loading &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >        &lt;&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Card className="h-full"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-6 w-32" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-4 w-40" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardContent className="flex justify-end"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-5 w-5" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardContent&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/Card&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Card className="h-full"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-6 w-28" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-4 w-36" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardContent className="flex justify-end"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-5 w-5" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardContent&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/Card&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Card className="h-full"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-6 w-36" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-4 w-44" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardHeader&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;CardContent className="flex justify-end"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Skeleton className="h-5 w-5" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/CardContent&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/Card&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/&gt;</span>
-<span class="cstat-no" title="statement not covered" >      )}</span>
+<span class="cstat-no" title="statement not covered" >        ))}</span>
+<span class="cstat-no" title="statement not covered" >        {!isLoading &amp;&amp; subjects.length === 0 &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >          &lt;div className="text-sm text-muted-foreground col-span-full text-center p-8"&gt;</span>
+<span class="cstat-no" title="statement not covered" >            No subjects found for {branch?.toUpperCase()} {year}-{semester}.</span>
+<span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >        )}</span>
+<span class="cstat-no" title="statement not covered" >        {isLoading &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >          &lt;&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;Card className="h-full"&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-6 w-32" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-4 w-40" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardContent className="flex justify-end"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-5 w-5" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardContent&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;/Card&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;Card className="h-full"&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-6 w-28" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-4 w-36" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardContent className="flex justify-end"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-5 w-5" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardContent&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;/Card&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;Card className="h-full"&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-6 w-36" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-4 w-44" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardHeader&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;CardContent className="flex justify-end"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;Skeleton className="h-5 w-5" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/CardContent&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;/Card&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;/&gt;</span>
+<span class="cstat-no" title="statement not covered" >        )}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >  )</span>
@@ -409,7 +490,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-27T15:27:06.339Z
+                at 2025-12-28T06:31:21.655Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
